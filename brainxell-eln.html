@@ -563,35 +563,70 @@ async function removeEntryFile(id) {
   try { await entriesDir.removeEntry(id + '.json'); } catch {}
 }
 
-async function writeAttachmentFile(att) {
-  // att.data = base64 dataURL, att.name, att.mime, att.id
-  const ext = att.name.includes('.') ? att.name.split('.').pop().toLowerCase() : 'bin';
-  const filename = att.id + '.' + ext;
+// Sanitize a string for use as a Windows folder/file name
+function sanitizeFSName(name) {
+  return (name || 'entry')
+    .replace(/[\\/:*?"<>|]/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 60) || 'entry';
+}
+
+// Resolve a path like "DAN36/file.xlsx" into a FileSystemFileHandle
+async function resolveFileHandle(relPath, create = false) {
+  const parts = relPath.split('/');
+  let dir = attachmentsDir;
+  for (let i = 0; i < parts.length - 1; i++) {
+    dir = await dir.getDirectoryHandle(parts[i], {create});
+  }
+  return dir.getFileHandle(parts[parts.length - 1], {create});
+}
+
+async function writeAttachmentFile(att, entryTitle) {
+  const subfolder = sanitizeFSName(entryTitle || 'entry');
+  const subDir = await attachmentsDir.getDirectoryHandle(subfolder, {create: true});
+
+  // Keep original filename; if a conflict exists append short uid
+  let fname = att.name;
+  try {
+    await subDir.getFileHandle(fname);  // throws if not found
+    const dot = fname.lastIndexOf('.');
+    const base = dot > -1 ? fname.slice(0, dot) : fname;
+    const ext  = dot > -1 ? fname.slice(dot) : '';
+    fname = `${base}_${att.id.slice(0, 6)}${ext}`;
+  } catch {}
+
   const b64 = att.data.split(',')[1];
   const bin = atob(b64);
   const buf = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-  const blob = new Blob([buf], {type: att.mime || 'application/octet-stream'});
-  const fh = await attachmentsDir.getFileHandle(filename, {create: true});
-  const w = await fh.createWritable();
-  await w.write(blob);
+  const fh = await subDir.getFileHandle(fname, {create: true});
+  const w  = await fh.createWritable();
+  await w.write(new Blob([buf], {type: att.mime || 'application/octet-stream'}));
   await w.close();
-  return filename;
+  return subfolder + '/' + fname;   // relative path stored in JSON
 }
 
 async function removeAttachmentFile(filename) {
   try {
-    await attachmentsDir.removeEntry(filename);
     if (blobCache[filename]) { URL.revokeObjectURL(blobCache[filename]); delete blobCache[filename]; }
+    const parts = filename.split('/');
+    if (parts.length === 1) {
+      await attachmentsDir.removeEntry(filename);
+    } else {
+      const subDir = await attachmentsDir.getDirectoryHandle(parts[0]);
+      await subDir.removeEntry(parts[1]);
+      // Remove subfolder if now empty
+      try { await attachmentsDir.removeEntry(parts[0]); } catch {}
+    }
   } catch {}
 }
 
 async function getBlobUrl(filename) {
   if (blobCache[filename]) return blobCache[filename];
   try {
-    const fh = await attachmentsDir.getFileHandle(filename);
-    const file = await fh.getFile();
-    const url = URL.createObjectURL(file);
+    const fh  = await resolveFileHandle(filename);
+    const url = URL.createObjectURL(await fh.getFile());
     blobCache[filename] = url;
     return url;
   } catch { return null; }
@@ -813,10 +848,11 @@ async function saveEntry(e) {
     const oldEntry = editId ? cachedEntries.find(x => x.id === editId) : null;
 
     // Write new attachment files, keep existing references
+    const entryTitle = document.getElementById('f-title').value.trim();
     const attachments = [];
     for (const att of pendingAttachments) {
       if (att.isNew) {
-        const filename = await writeAttachmentFile(att);
+        const filename = await writeAttachmentFile(att, entryTitle);
         attachments.push({id: att.id, name: att.name, size: att.size, mime: att.mime, filename});
       } else {
         attachments.push({id: att.id, name: att.name, size: att.size, mime: att.mime, filename: att.filename});
@@ -1152,8 +1188,11 @@ async function openFilePreview(filename, name, mime) {
   if (_odCid && isOffice) {
     const folder = (_odFolder || (rootHandle ? rootHandle.name : ''))
       .replace(/\\/g, '/').replace(/^\/|\/$/g, '');
-    // Navigate to the attachments folder on OneDrive — user clicks file → Excel Online opens
-    const folderPath = `/personal/${_odCid}/${folder}/attachments`;
+    // Navigate to the entry's subfolder on OneDrive — user clicks file → Excel Online opens
+    const subfolder  = filename.includes('/') ? filename.split('/')[0] : '';
+    const folderPath = subfolder
+      ? `/personal/${_odCid}/${folder}/attachments/${subfolder}`
+      : `/personal/${_odCid}/${folder}/attachments`;
     const oneDriveUrl = `https://onedrive.live.com/?id=${encodeURIComponent(folderPath)}&view=0`;
     showOneDriveOpenPrompt(oneDriveUrl, name, filename);
     return;
