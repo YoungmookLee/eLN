@@ -848,11 +848,11 @@ async function saveEntry(e) {
     const oldEntry = editId ? cachedEntries.find(x => x.id === editId) : null;
 
     // Write new attachment files, keep existing references
-    const entryTitle = document.getElementById('f-title').value.trim();
+    const entryType = document.getElementById('f-type').value.trim();
     const attachments = [];
     for (const att of pendingAttachments) {
       if (att.isNew) {
-        const filename = await writeAttachmentFile(att, entryTitle);
+        const filename = await writeAttachmentFile(att, entryType);
         attachments.push({id: att.id, name: att.name, size: att.size, mime: att.mime, filename});
       } else {
         attachments.push({id: att.id, name: att.name, size: att.size, mime: att.mime, filename: att.filename});
@@ -1188,7 +1188,7 @@ async function openFilePreview(filename, name, mime) {
   if (_odCid && isOffice) {
     const folder = (_odFolder || (rootHandle ? rootHandle.name : ''))
       .replace(/\\/g, '/').replace(/^\/|\/$/g, '');
-    // Navigate to the entry's subfolder on OneDrive — user clicks file → Excel Online opens
+    // Navigate to the entry's experiment-type subfolder on OneDrive
     const subfolder  = filename.includes('/') ? filename.split('/')[0] : '';
     const folderPath = subfolder
       ? `/personal/${_odCid}/${folder}/attachments/${subfolder}`
