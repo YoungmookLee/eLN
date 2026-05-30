@@ -222,10 +222,13 @@
         <div class="connect-logo-sub">Electronic Lab Notebook</div>
       </div>
     </div>
-    <div class="connect-title">Connect to Shared Folder</div>
-    <div class="connect-desc">All entries and attachments are saved directly to your team's shared network folder.</div>
+    <div class="connect-title">Select a Folder to Save Data</div>
+    <div class="connect-desc">All entries and attachments will be saved as real files in the folder you choose — local or a mapped network drive.</div>
     <div class="connect-note">
-      💡 <strong>Before clicking below:</strong> make sure your Windows shared folder is <strong>mapped as a drive letter</strong> (e.g. <code>Z:\</code>) so Chrome can access it. Then select that drive or any subfolder inside it.
+      💡 <strong>How to pick a folder:</strong><br>
+      • <strong>Local use:</strong> select any folder (e.g. Documents → New Folder → <em>BrainXell-ELN</em>)<br>
+      • <strong>Shared network drive:</strong> type your mapped drive path (e.g. <code>Z:\ELN</code>) in the <em>Folder:</em> box at the bottom of the dialog, then press Enter and click Select Folder<br>
+      • The app automatically creates <code>entries\</code> and <code>attachments\</code> subfolders inside
     </div>
     <button class="btn btn-primary" style="width:100%;justify-content:center;font-size:15px;padding:12px;" onclick="selectFolder()">
       📁 &nbsp;Select Shared Folder
