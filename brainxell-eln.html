@@ -200,6 +200,15 @@
   .empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: .4; }
   .empty-state p { font-size: 15px; }
 
+  /* ── Spreadsheet preview ── */
+  .sheet-tabs { display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
+  .sheet-tab { padding:4px 14px; border-radius:20px; border:1.5px solid var(--border); font-size:12px; font-weight:600; cursor:pointer; background:var(--white); color:var(--text-muted); transition:background .15s,color .15s; }
+  .sheet-tab.active { background:var(--accent); color:var(--white); border-color:var(--accent); }
+  .sheet-wrap { overflow-x:auto; max-height:60vh; overflow-y:auto; border:1px solid var(--border); border-radius:8px; }
+  .sheet-wrap table { border-collapse:collapse; font-size:12px; white-space:nowrap; }
+  .sheet-wrap th, .sheet-wrap td { border:1px solid var(--border); padding:5px 10px; text-align:left; }
+  .sheet-wrap thead th, .sheet-wrap tr:first-child td { background:var(--navy-pale); font-weight:700; color:var(--text-muted); position:sticky; top:0; z-index:1; }
+
   @media (max-width: 768px) {
     nav { width: 56px; }
     .nav-btn span { display: none; }
@@ -437,6 +446,21 @@
   <button class="lightbox-close" onclick="closeLightbox()">✕</button>
   <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()">
   <div class="lightbox-caption" id="lightbox-caption"></div>
+</div>
+
+<!-- ═══ FILE PREVIEW MODAL ═══ -->
+<div class="modal-overlay" id="file-preview-overlay" onclick="closeFilePreview(event)">
+  <div class="modal" style="max-width:96vw;width:1100px;">
+    <div class="modal-header">
+      <div class="modal-title" id="file-preview-title"></div>
+      <button class="modal-close" onclick="closeFilePreviewDirect()">✕</button>
+    </div>
+    <div class="modal-body" id="file-preview-body" style="overflow-x:auto;padding:20px 24px 28px;"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeFilePreviewDirect()">Close</button>
+      <button class="btn btn-outline" id="file-preview-dl" style="margin-left:8px;">⬇ Download</button>
+    </div>
+  </div>
 </div>
 
 <!-- ═══ TOAST ═══ -->
@@ -718,7 +742,11 @@ function renderAttachList() {
         const src = att.isNew ? att.data : (att.blobUrl || '');
         openLightboxDirect(src, att.name);
       } else {
-        openBlobFromDataUrl(att.isNew ? att.data : null, att.blobUrl, att.mime);
+        if (att.isNew) {
+          openBlobFromDataUrl(att.data, null, att.mime);
+        } else {
+          openFilePreview(att.filename, att.name, att.mime);
+        }
       }
     });
   });
@@ -970,9 +998,8 @@ async function openEntry(id) {
         if (url) openLightboxDirect(url, a.name);
       });
     } else {
-      tile.addEventListener('click', async () => {
-        const url = await getBlobUrl(a.filename);
-        if (url) window.open(url, '_blank');
+      tile.addEventListener('click', () => {
+        openFilePreview(a.filename, a.name, a.mime);
       });
     }
   }
@@ -998,6 +1025,98 @@ function openBlobFromDataUrl(dataUrl, blobUrl, mime) {
 }
 function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+// ── File preview (spreadsheets, PDF, etc.) ───────────────────────────────
+let _xlsxLoaded = false;
+async function ensureXLSX() {
+  if (_xlsxLoaded || window.XLSX) { _xlsxLoaded = true; return; }
+  await new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
+    s.onload = () => { _xlsxLoaded = true; res(); };
+    s.onerror = rej;
+    document.head.appendChild(s);
+  });
+}
+
+async function openFilePreview(filename, name, mime) {
+  const isPdf = mime === 'application/pdf';
+  const isImg = mime && mime.startsWith('image/');
+  const isCsv = mime.includes('csv') || name.toLowerCase().endsWith('.csv');
+  const isSheet = mime.includes('spreadsheet') || mime.includes('excel') ||
+    name.toLowerCase().endsWith('.xlsx') || name.toLowerCase().endsWith('.xls') ||
+    name.toLowerCase().endsWith('.ods') || isCsv;
+
+  const url = await getBlobUrl(filename);
+  if (!url) { showToast('❌ Could not load file.'); return; }
+
+  if (isImg) { openLightboxDirect(url, name); return; }
+
+  if (isPdf) {
+    // Chrome opens PDFs natively in a new tab via blob URL
+    window.open(url, '_blank');
+    return;
+  }
+
+  if (isSheet) {
+    await showSpreadsheetPreview(url, name, filename);
+    return;
+  }
+
+  // Unsupported type — open/download
+  window.open(url, '_blank');
+}
+
+async function showSpreadsheetPreview(blobUrl, name, filename) {
+  document.getElementById('file-preview-title').textContent = name;
+  document.getElementById('file-preview-body').innerHTML =
+    '<div style="text-align:center;padding:48px 0;"><div class="spinner" style="margin:0 auto;"></div><div style="margin-top:12px;color:var(--text-muted);font-size:13px;">Loading spreadsheet…</div></div>';
+  document.getElementById('file-preview-overlay').classList.add('open');
+
+  // Download button
+  const dlBtn = document.getElementById('file-preview-dl');
+  dlBtn.onclick = () => { const a=document.createElement('a'); a.href=blobUrl; a.download=name; a.click(); };
+
+  try {
+    await ensureXLSX();
+    const resp = await fetch(blobUrl);
+    const ab = await resp.arrayBuffer();
+    const wb = window.XLSX.read(ab, {type:'array'});
+
+    let activeSheet = wb.SheetNames[0];
+
+    function renderSheet(sheetName) {
+      const ws = wb.Sheets[sheetName];
+      const rows = window.XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      if (!rows.length) return '<div style="color:var(--text-muted);padding:20px;">Sheet is empty.</div>';
+      const header = rows[0];
+      const body = rows.slice(1);
+      const th = header.map(c => `<th>${htmlEsc(String(c))}</th>`).join('');
+      const tr = body.map(row =>
+        `<tr>${header.map((_,i) => `<td>${htmlEsc(String(row[i]??''))}</td>`).join('')}</tr>`
+      ).join('');
+      return `<div class="sheet-wrap"><table><thead><tr>${th}</tr></thead><tbody>${tr}</tbody></table></div>`;
+    }
+
+    function rebuildUI(activeSheet) {
+      const tabs = wb.SheetNames.length > 1
+        ? `<div class="sheet-tabs">${wb.SheetNames.map(n =>
+            `<button class="sheet-tab${n===activeSheet?' active':''}" onclick="switchSheet('${htmlEsc(n)}')">${htmlEsc(n)}</button>`
+          ).join('')}</div>` : '';
+      document.getElementById('file-preview-body').innerHTML = tabs + renderSheet(activeSheet);
+    }
+
+    window.switchSheet = name => rebuildUI(name);
+    rebuildUI(activeSheet);
+
+  } catch (err) {
+    document.getElementById('file-preview-body').innerHTML =
+      `<div style="color:var(--danger);padding:20px;">⚠️ Could not parse file: ${htmlEsc(err.message)}</div>`;
+  }
+}
+
+function closeFilePreview(e) { if (e.target===document.getElementById('file-preview-overlay')) closeFilePreviewDirect(); }
+function closeFilePreviewDirect() { document.getElementById('file-preview-overlay').classList.remove('open'); }
 
 // ── Delete ────────────────────────────────────────────────────────────────
 async function deleteEntry(id) {
