@@ -1018,7 +1018,7 @@ async function openEntry(id) {
       return `<div class="attach-grid-item" data-att-id="${a.id}" data-att-type="${isImg?'image':'file'}" data-att-filename="${htmlEsc(a.filename)}">
         ${isImg
           ? `<div class="attach-placeholder"><div class="spinner spinner-sm" style="margin:0;"></div></div>`
-          : `<div class="attach-grid-file">${fileIcon(a.mime)}<div style="font-size:11px;color:var(--text-muted);padding:0 6px;text-align:center;word-break:break-all;pointer-events:none">${htmlEsc(a.name)}</div></div>`}
+          : `<div class="attach-grid-file">${fileIcon(a.mime)}</div>`}
         <div class="attach-grid-label">${htmlEsc(a.name)}</div>
       </div>`;
     }).join('');
