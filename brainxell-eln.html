@@ -1154,7 +1154,7 @@ async function openFilePreview(filename, name, mime) {
     const folder = (_odFolder || (rootHandle ? rootHandle.name : ''))
       .replace(/\\/g, '/').replace(/^\/|\/$/g, '');
     const fileUrl    = `https://d.docs.live.net/${_odCid}/${folder}/attachments/${filename}`;
-    const viewerUrl  = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`;
+    const viewerUrl  = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(fileUrl)}`;
     showOfficeOnlinePreview(viewerUrl, name, filename);
     return;
   }
@@ -1168,24 +1168,8 @@ async function openFilePreview(filename, name, mime) {
 }
 
 function showOfficeOnlinePreview(viewerUrl, name, filename) {
-  document.getElementById('file-preview-title').textContent = name;
-  document.getElementById('file-preview-body').innerHTML =
-    `<div style="text-align:center;padding:16px 0 8px;font-size:12px;color:var(--text-muted);">
-       Loading Excel Online… make sure you are signed into Microsoft in Chrome.
-     </div>
-     <iframe src="${viewerUrl}"
-       style="width:100%;height:68vh;border:none;border-radius:6px;display:block;"
-       allowfullscreen
-       sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation">
-     </iframe>`;
-  const dlBtn = document.getElementById('file-preview-dl');
-  const openBtn = document.getElementById('file-preview-open');
-  dlBtn.onclick = async () => {
-    const u = await getBlobUrl(filename);
-    if (u) { const a=document.createElement('a'); a.href=u; a.download=name; a.click(); }
-  };
-  openBtn.style.display = 'none'; // hide "where is file" when using online viewer
-  document.getElementById('file-preview-overlay').classList.add('open');
+  // Iframe is blocked by Microsoft X-Frame-Options — open in new tab instead
+  window.open(viewerUrl, '_blank');
 }
 
 async function showSpreadsheetPreview(blobUrl, name, filename) {
