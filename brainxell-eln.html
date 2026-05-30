@@ -204,10 +204,10 @@
   .sheet-tabs { display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
   .sheet-tab { padding:4px 14px; border-radius:20px; border:1.5px solid var(--border); font-size:12px; font-weight:600; cursor:pointer; background:var(--white); color:var(--text-muted); transition:background .15s,color .15s; }
   .sheet-tab.active { background:var(--accent); color:var(--white); border-color:var(--accent); }
-  .sheet-wrap { overflow:auto; max-height:62vh; border:1px solid var(--border); border-radius:8px; }
-  .sheet-wrap table { border-collapse:collapse; font-size:12px; white-space:nowrap; min-width:100%; }
-  .sheet-wrap td, .sheet-wrap th { border:1px solid #d1d9e6; padding:5px 10px; text-align:left; vertical-align:top; min-width:60px; }
-  .sheet-wrap tr:first-child td, .sheet-wrap tr:first-child th { background:var(--navy-pale); font-weight:600; position:sticky; top:0; z-index:1; }
+  .sheet-wrap { overflow:auto; max-height:62vh; border:1px solid var(--border); border-radius:8px; background:#fff; }
+  /* Minimal overrides — let SheetJS inline styles control alignment/color */
+  .sheet-wrap table { border-collapse:collapse; font-size:12px; white-space:nowrap; }
+  .sheet-wrap td, .sheet-wrap th { border:1px solid #d1d9e6 !important; padding:4px 8px; min-width:40px; vertical-align:middle; }
 
   @media (max-width: 768px) {
     nav { width: 56px; }
@@ -1101,13 +1101,23 @@ function closeSettingsDirect() { document.getElementById('settings-overlay').cla
 let _xlsxLoaded = false;
 async function ensureXLSX() {
   if (_xlsxLoaded || window.XLSX) { _xlsxLoaded = true; return; }
-  await new Promise((res, rej) => {
-    const s = document.createElement('script');
-    s.src = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
-    s.onload = () => { _xlsxLoaded = true; res(); };
-    s.onerror = rej;
-    document.head.appendChild(s);
-  });
+  // Try multiple CDN sources in case one is blocked
+  const cdns = [
+    'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+  ];
+  for (const src of cdns) {
+    try {
+      await new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      });
+      if (window.XLSX) { _xlsxLoaded = true; return; }
+    } catch {}
+  }
+  if (!window.XLSX) throw new Error('Could not load spreadsheet library. Check your internet connection.');
 }
 
 async function openFilePreview(filename, name, mime) {
@@ -1134,47 +1144,74 @@ async function openFilePreview(filename, name, mime) {
 async function showSpreadsheetPreview(blobUrl, name, filename) {
   document.getElementById('file-preview-title').textContent = name;
   document.getElementById('file-preview-body').innerHTML =
-    '<div style="text-align:center;padding:48px 0;"><div class="spinner" style="margin:0 auto;"></div><div style="margin-top:12px;color:var(--text-muted);font-size:13px;">Loading spreadsheet…</div></div>';
+    '<div style="text-align:center;padding:48px 0;"><div class="spinner" style="margin:0 auto;"></div><div style="margin-top:14px;color:var(--text-muted);font-size:13px;">Loading spreadsheet library…</div></div>';
   document.getElementById('file-preview-overlay').classList.add('open');
 
-  // Download button
-  const dlBtn = document.getElementById('file-preview-dl');
-  dlBtn.onclick = () => { const a=document.createElement('a'); a.href=blobUrl; a.download=name; a.click(); };
-
-  // Open in Excel — triggers browser download which Windows opens directly in Excel
-  const openBtn = document.getElementById('file-preview-open');
-  openBtn.onclick = () => { const a=document.createElement('a'); a.href=blobUrl; a.download=name; a.click(); };
+  const trigger = (btn, fn) => { const el = document.getElementById(btn); if (el) el.onclick = fn; };
+  const dl = () => { const a=document.createElement('a'); a.href=blobUrl; a.download=name; a.click(); };
+  trigger('file-preview-dl', dl);
+  trigger('file-preview-open', dl);
 
   try {
     await ensureXLSX();
-    const resp = await fetch(blobUrl);
-    const ab = await resp.arrayBuffer();
-    const wb = window.XLSX.read(ab, {type:'array'});
 
-    let activeSheet = wb.SheetNames[0];
+    document.querySelector('#file-preview-body div[style*="text-align:center"]') &&
+      (document.getElementById('file-preview-body').innerHTML =
+        '<div style="text-align:center;padding:48px 0;"><div class="spinner" style="margin:0 auto;"></div><div style="margin-top:14px;color:var(--text-muted);font-size:13px;">Parsing file…</div></div>');
+
+    const resp = await fetch(blobUrl);
+    if (!resp.ok) throw new Error('Could not read file from storage.');
+    const ab = await resp.arrayBuffer();
+
+    const wb = window.XLSX.read(ab, {
+      type: 'array',
+      cellStyles: true,   // read fill/font/alignment
+      cellDates: true,    // parse dates properly
+      cellNF: true,       // number formats
+      sheetStubs: true,   // include empty cells (needed for correct merge layout)
+    });
+
+    if (!wb.SheetNames.length) throw new Error('No sheets found in this file.');
 
     function renderSheet(sheetName) {
       const ws = wb.Sheets[sheetName];
-      if (!ws || !ws['!ref']) return '<div style="color:var(--text-muted);padding:20px;">Sheet is empty.</div>';
-      // sheet_to_html preserves merged cells and original layout
-      const html = window.XLSX.utils.sheet_to_html(ws, {id: 'sheetjs-table', editable: false});
+      if (!ws || !ws['!ref']) return '<div style="color:var(--text-muted);padding:20px;">This sheet is empty.</div>';
+
+      // sheet_to_html produces correct colspan/rowspan for merged cells
+      const html = window.XLSX.utils.sheet_to_html(ws, {editable: false});
       return `<div class="sheet-wrap">${html}</div>`;
     }
 
-    function rebuildUI(activeSheet) {
-      const tabs = wb.SheetNames.length > 1
-        ? `<div class="sheet-tabs">${wb.SheetNames.map(n =>
-            `<button class="sheet-tab${n===activeSheet?' active':''}" onclick="switchSheet('${htmlEsc(n)}')">${htmlEsc(n)}</button>`
-          ).join('')}</div>` : '';
-      document.getElementById('file-preview-body').innerHTML = tabs + renderSheet(activeSheet);
+    function buildTabs(active) {
+      if (wb.SheetNames.length <= 1) return '';
+      return `<div class="sheet-tabs">${wb.SheetNames.map(n =>
+        `<button class="sheet-tab${n===active?' active':''}" onclick="switchSheet(this,'${htmlEsc(n)}')">${htmlEsc(n)}</button>`
+      ).join('')}</div>`;
     }
 
-    window.switchSheet = name => rebuildUI(name);
-    rebuildUI(activeSheet);
+    function rebuildUI(active) {
+      document.getElementById('file-preview-body').innerHTML = buildTabs(active) + renderSheet(active);
+    }
+
+    window.switchSheet = (btn, name) => {
+      document.querySelectorAll('.sheet-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const body = document.getElementById('file-preview-body');
+      // replace just the table part (keep tabs)
+      const wrap = body.querySelector('.sheet-wrap');
+      if (wrap) wrap.outerHTML = renderSheet(name);
+      else rebuildUI(name);
+    };
+
+    rebuildUI(wb.SheetNames[0]);
 
   } catch (err) {
-    document.getElementById('file-preview-body').innerHTML =
-      `<div style="color:var(--danger);padding:20px;">⚠️ Could not parse file: ${htmlEsc(err.message)}</div>`;
+    document.getElementById('file-preview-body').innerHTML = `
+      <div style="padding:24px;line-height:1.8;">
+        <div style="color:var(--danger);font-weight:600;font-size:15px;">⚠️ Preview failed</div>
+        <div style="color:var(--text-muted);font-size:13px;margin-top:6px;">${htmlEsc(err.message)}</div>
+        <div style="margin-top:16px;font-size:13px;">Use <strong>Open in Excel</strong> below to view the full file.</div>
+      </div>`;
   }
 }
 
