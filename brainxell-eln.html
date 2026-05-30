@@ -1173,13 +1173,81 @@ async function showSpreadsheetPreview(blobUrl, name, filename) {
 
     if (!wb.SheetNames.length) throw new Error('No sheets found in this file.');
 
+    function rgbColor(argb) {
+      if (!argb) return null;
+      const hex = argb.replace(/^FF/i,''); // strip alpha
+      return hex.length === 6 ? '#' + hex : null;
+    }
+
+    function cellStyle(cell) {
+      let s = 'border:1px solid #d1d9e6;padding:4px 8px;vertical-align:middle;';
+      if (!cell || !cell.s) return s;
+      const cs = cell.s;
+      // Background fill
+      if (cs.fill) {
+        const bg = rgbColor(cs.fill.fgColor?.rgb) || rgbColor(cs.fill.bgColor?.rgb);
+        if (bg && bg !== '#000000') s += `background:${bg};`;
+      }
+      // Font
+      if (cs.font) {
+        if (cs.font.bold) s += 'font-weight:bold;';
+        if (cs.font.italic) s += 'font-style:italic;';
+        if (cs.font.underline) s += 'text-decoration:underline;';
+        const fc = rgbColor(cs.font.color?.rgb);
+        if (fc && fc !== '#000000') s += `color:${fc};`;
+        if (cs.font.sz) s += `font-size:${Math.min(Math.max(cs.font.sz * 0.9, 10), 18)}px;`;
+      }
+      // Alignment
+      if (cs.alignment) {
+        if (cs.alignment.horizontal) s += `text-align:${cs.alignment.horizontal};`;
+        if (cs.alignment.wrapText) s += 'white-space:pre-wrap;word-break:break-word;max-width:240px;';
+      }
+      return s;
+    }
+
     function renderSheet(sheetName) {
       const ws = wb.Sheets[sheetName];
       if (!ws || !ws['!ref']) return '<div style="color:var(--text-muted);padding:20px;">This sheet is empty.</div>';
 
-      // sheet_to_html produces correct colspan/rowspan for merged cells
-      const html = window.XLSX.utils.sheet_to_html(ws, {editable: false});
-      return `<div class="sheet-wrap">${html}</div>`;
+      const range = window.XLSX.utils.decode_range(ws['!ref']);
+      const merges = ws['!merges'] || [];
+      const cols   = ws['!cols'] || [];
+
+      // Build merge lookup
+      const mergeAttrs = {}; // "R:C" -> "rowspan=X colspan=Y"
+      const skipped    = new Set();
+      merges.forEach(m => {
+        mergeAttrs[`${m.s.r}:${m.s.c}`] =
+          (m.e.r > m.s.r ? ` rowspan="${m.e.r - m.s.r + 1}"` : '') +
+          (m.e.c > m.s.c ? ` colspan="${m.e.c - m.s.c + 1}"` : '');
+        for (let r = m.s.r; r <= m.e.r; r++)
+          for (let c = m.s.c; c <= m.e.c; c++)
+            if (r !== m.s.r || c !== m.s.c) skipped.add(`${r}:${c}`);
+      });
+
+      // Column widths
+      let colgroup = '<colgroup>';
+      for (let C = range.s.c; C <= range.e.c; C++) {
+        const w = cols[C]?.wch || cols[C]?.width || 10;
+        colgroup += `<col style="width:${Math.min(Math.max(w * 7, 40), 280)}px">`;
+      }
+      colgroup += '</colgroup>';
+
+      let rows = '';
+      for (let R = range.s.r; R <= range.e.r; R++) {
+        let tds = '';
+        for (let C = range.s.c; C <= range.e.c; C++) {
+          const key  = `${R}:${C}`;
+          if (skipped.has(key)) continue;
+          const addr = window.XLSX.utils.encode_cell({r:R, c:C});
+          const cell = ws[addr];
+          const val  = cell ? window.XLSX.utils.format_cell(cell) : '';
+          const ma   = mergeAttrs[key] || '';
+          tds += `<td${ma} style="${cellStyle(cell)}">${htmlEsc(String(val))}</td>`;
+        }
+        rows += `<tr>${tds}</tr>`;
+      }
+      return `<div class="sheet-wrap"><table>${colgroup}${rows}</table></div>`;
     }
 
     function buildTabs(active) {
