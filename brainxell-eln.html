@@ -204,10 +204,10 @@
   .sheet-tabs { display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
   .sheet-tab { padding:4px 14px; border-radius:20px; border:1.5px solid var(--border); font-size:12px; font-weight:600; cursor:pointer; background:var(--white); color:var(--text-muted); transition:background .15s,color .15s; }
   .sheet-tab.active { background:var(--accent); color:var(--white); border-color:var(--accent); }
-  .sheet-wrap { overflow-x:auto; max-height:60vh; overflow-y:auto; border:1px solid var(--border); border-radius:8px; }
-  .sheet-wrap table { border-collapse:collapse; font-size:12px; white-space:nowrap; }
-  .sheet-wrap th, .sheet-wrap td { border:1px solid var(--border); padding:5px 10px; text-align:left; }
-  .sheet-wrap thead th, .sheet-wrap tr:first-child td { background:var(--navy-pale); font-weight:700; color:var(--text-muted); position:sticky; top:0; z-index:1; }
+  .sheet-wrap { overflow:auto; max-height:62vh; border:1px solid var(--border); border-radius:8px; }
+  .sheet-wrap table { border-collapse:collapse; font-size:12px; white-space:nowrap; min-width:100%; }
+  .sheet-wrap td, .sheet-wrap th { border:1px solid #d1d9e6; padding:5px 10px; text-align:left; vertical-align:top; min-width:60px; }
+  .sheet-wrap tr:first-child td, .sheet-wrap tr:first-child th { background:var(--navy-pale); font-weight:600; position:sticky; top:0; z-index:1; }
 
   @media (max-width: 768px) {
     nav { width: 56px; }
@@ -1087,15 +1087,10 @@ async function showSpreadsheetPreview(blobUrl, name, filename) {
 
     function renderSheet(sheetName) {
       const ws = wb.Sheets[sheetName];
-      const rows = window.XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
-      if (!rows.length) return '<div style="color:var(--text-muted);padding:20px;">Sheet is empty.</div>';
-      const header = rows[0];
-      const body = rows.slice(1);
-      const th = header.map(c => `<th>${htmlEsc(String(c))}</th>`).join('');
-      const tr = body.map(row =>
-        `<tr>${header.map((_,i) => `<td>${htmlEsc(String(row[i]??''))}</td>`).join('')}</tr>`
-      ).join('');
-      return `<div class="sheet-wrap"><table><thead><tr>${th}</tr></thead><tbody>${tr}</tbody></table></div>`;
+      if (!ws || !ws['!ref']) return '<div style="color:var(--text-muted);padding:20px;">Sheet is empty.</div>';
+      // sheet_to_html preserves merged cells and original layout
+      const html = window.XLSX.utils.sheet_to_html(ws, {id: 'sheetjs-table', editable: false});
+      return `<div class="sheet-wrap">${html}</div>`;
     }
 
     function rebuildUI(activeSheet) {
