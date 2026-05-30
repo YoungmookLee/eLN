@@ -1148,14 +1148,14 @@ async function openFilePreview(filename, name, mime) {
     return;
   }
 
-  // ── Office Online via OneDrive CID ─────────────────────────────────────
-  // Requires user to be signed into Microsoft in Chrome + CID configured in ⚙️ Settings
+  // ── Open directly on OneDrive web (Excel Online) ───────────────────────
   if (_odCid && isOffice) {
     const folder = (_odFolder || (rootHandle ? rootHandle.name : ''))
       .replace(/\\/g, '/').replace(/^\/|\/$/g, '');
-    const fileUrl    = `https://d.docs.live.net/${_odCid}/${folder}/attachments/${filename}`;
-    const viewerUrl  = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(fileUrl)}`;
-    showOfficeOnlinePreview(viewerUrl, name, filename);
+    // Navigate to the attachments folder on OneDrive — user clicks file → Excel Online opens
+    const folderPath = `/personal/${_odCid}/${folder}/attachments`;
+    const oneDriveUrl = `https://onedrive.live.com/?id=${encodeURIComponent(folderPath)}&view=0`;
+    showOneDriveOpenPrompt(oneDriveUrl, name, filename);
     return;
   }
 
@@ -1167,9 +1167,31 @@ async function openFilePreview(filename, name, mime) {
   window.open(url, '_blank');
 }
 
-function showOfficeOnlinePreview(viewerUrl, name, filename) {
-  // Iframe is blocked by Microsoft X-Frame-Options — open in new tab instead
-  window.open(viewerUrl, '_blank');
+function showOneDriveOpenPrompt(folderUrl, name, filename) {
+  document.getElementById('file-preview-title').textContent = name;
+  document.getElementById('file-preview-body').innerHTML = `
+    <div style="padding:32px 24px;text-align:center;">
+      <div style="font-size:48px;margin-bottom:16px;">📂</div>
+      <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:10px;">Open in Excel Online</div>
+      <p style="font-size:13px;color:var(--text-muted);line-height:1.7;max-width:420px;margin:0 auto 24px;">
+        Click below to open your <strong>attachments</strong> folder on OneDrive.<br>
+        Then click <strong>${htmlEsc(name)}</strong> to open it in Excel Online — full formatting, no download.
+      </p>
+      <a href="${folderUrl}" target="_blank" class="btn btn-primary" style="font-size:15px;padding:12px 28px;text-decoration:none;">
+        🔗 &nbsp;Open OneDrive attachments folder
+      </a>
+      <p style="margin-top:16px;font-size:11px;color:var(--text-muted);">
+        A new tab will open → click <strong>${htmlEsc(name)}</strong> → Excel Online opens the file
+      </p>
+    </div>`;
+  const dlBtn  = document.getElementById('file-preview-dl');
+  const openBtn = document.getElementById('file-preview-open');
+  dlBtn.onclick = async () => {
+    const u = await getBlobUrl(filename);
+    if (u) { const a=document.createElement('a'); a.href=u; a.download=name; a.click(); }
+  };
+  if (openBtn) openBtn.style.display = 'none';
+  document.getElementById('file-preview-overlay').classList.add('open');
 }
 
 async function showSpreadsheetPreview(blobUrl, name, filename) {
