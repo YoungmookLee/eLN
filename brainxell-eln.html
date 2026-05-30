@@ -459,17 +459,21 @@
     <div class="modal-body">
       <div class="detail-label" style="margin-bottom:8px;">SharePoint Attachments URL</div>
       <p style="font-size:13px;color:var(--text-muted);line-height:1.7;margin-bottom:14px;">
-        Paste the <strong>OneDrive or SharePoint URL</strong> of your <code>attachments</code> folder.<br>
-        This lets Excel, Word, and PowerPoint files open in <strong>Microsoft Office Online</strong> — full formatting, no install needed.<br><br>
-        <strong>Personal OneDrive:</strong><br>
-        1. Go to <a href="https://onedrive.live.com" target="_blank" style="color:var(--accent);">onedrive.live.com</a><br>
-        2. Navigate into your <code>BrainXell-ELN → attachments</code> folder<br>
-        3. Copy the URL from the browser address bar and paste it below<br><br>
-        <strong>SharePoint:</strong> navigate to the <code>attachments</code> folder in your SharePoint library and copy its URL.
+        Enter your <strong>OneDrive CID</strong> to open Excel/Word files directly in <strong>Microsoft Office Online</strong> inside the app — using your existing Microsoft sign-in in Chrome.<br><br>
+        <strong>How to find your CID:</strong><br>
+        1. Go to <a href="https://onedrive.live.com" target="_blank" style="color:var(--accent);">onedrive.live.com</a> in Chrome<br>
+        2. Look at the URL — find <code>cid=<strong>XXXXXXXXXXXXXXXX</strong></code><br>
+        3. Copy those 16 characters and paste below
       </p>
-      <div class="form-group">
-        <label for="sp-url-input">OneDrive / SharePoint — attachments folder URL</label>
-        <input type="url" id="sp-url-input" placeholder="https://onedrive.live.com/... or https://brainxelltx.sharepoint.com/...">
+      <div class="form-row cols-2" style="margin-bottom:0;">
+        <div class="form-group">
+          <label for="sp-cid-input">OneDrive CID (16 characters)</label>
+          <input type="text" id="sp-cid-input" placeholder="e.g. a1b2c3d4e5f67890" maxlength="32">
+        </div>
+        <div class="form-group">
+          <label for="sp-folder-input">ELN folder name on OneDrive</label>
+          <input type="text" id="sp-folder-input" placeholder="e.g. BrainXell-ELN">
+        </div>
       </div>
       <div id="sp-url-status" style="font-size:12px;margin-top:8px;"></div>
     </div>
@@ -1062,12 +1066,20 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbo
 // ── Settings (OneDrive / SharePoint URL) ────────────────────────────────
 let _spUrl = ''; // base URL of the attachments folder on OneDrive/SharePoint
 
+let _odCid = '', _odFolder = '';
+
 async function loadSettings() {
   try {
     const db = await openHandleDB();
     return new Promise(res => {
       const req = db.transaction('handles','readonly').objectStore('handles').get('settings');
-      req.onsuccess = e => { const s = e.target.result || {}; _spUrl = s.spUrl || ''; res(); };
+      req.onsuccess = e => {
+        const s = e.target.result || {};
+        _spUrl    = s.spUrl    || '';
+        _odCid    = s.odCid    || '';
+        _odFolder = s.odFolder || '';
+        res();
+      };
       req.onerror = () => res();
     });
   } catch {}
@@ -1081,17 +1093,18 @@ async function persistSettings(obj) {
   });
 }
 function openSettings() {
-  document.getElementById('sp-url-input').value = _spUrl;
+  document.getElementById('sp-cid-input').value    = _odCid;
+  document.getElementById('sp-folder-input').value = _odFolder || (rootHandle ? rootHandle.name : '');
   document.getElementById('sp-url-status').textContent = '';
   document.getElementById('settings-overlay').classList.add('open');
 }
 async function saveSettings() {
-  const val = document.getElementById('sp-url-input').value.trim().replace(/\/$/, '');
-  _spUrl = val;
-  await persistSettings({spUrl: val});
-  document.getElementById('sp-url-status').innerHTML =
-    val ? `<span style="color:var(--success);">✅ Saved! Office Online viewer is enabled.</span>`
-        : `<span style="color:var(--text-muted);">Cleared — will use built-in viewer.</span>`;
+  _odCid    = document.getElementById('sp-cid-input').value.trim().replace(/\s/g,'');
+  _odFolder = document.getElementById('sp-folder-input').value.trim().replace(/\\/g,'/').replace(/\/$/,'');
+  await persistSettings({spUrl: _spUrl, odCid: _odCid, odFolder: _odFolder});
+  document.getElementById('sp-url-status').innerHTML = _odCid
+    ? `<span style="color:var(--success);">✅ Saved! Office Online viewer enabled.</span>`
+    : `<span style="color:var(--text-muted);">Cleared — will use built-in table viewer.</span>`;
   setTimeout(closeSettingsDirect, 1200);
 }
 function closeSettings(e) { if (e.target===document.getElementById('settings-overlay')) closeSettingsDirect(); }
@@ -1121,15 +1134,28 @@ async function ensureXLSX() {
 }
 
 async function openFilePreview(filename, name, mime) {
-  const isImg   = mime && mime.startsWith('image/');
-  const isPdf   = mime === 'application/pdf';
-  const isCsv   = mime.includes('csv') || name.toLowerCase().endsWith('.csv');
-  const isSheet = mime.includes('spreadsheet') || mime.includes('excel') ||
-    /\.(xlsx|xls|ods)$/i.test(name) || isCsv;
+  const isImg    = mime && mime.startsWith('image/');
+  const isPdf    = mime === 'application/pdf';
+  const isCsv    = mime.includes('csv') || name.toLowerCase().endsWith('.csv');
+  const isOffice = mime.includes('spreadsheet') || mime.includes('excel') ||
+    mime.includes('word') || mime.includes('powerpoint') || mime.includes('presentation') ||
+    /\.(xlsx|xls|ods|docx|doc|pptx|ppt)$/i.test(name);
+  const isSheet  = isOffice || isCsv;
 
   if (isImg) {
     const url = await getBlobUrl(filename);
     if (url) openLightboxDirect(url, name);
+    return;
+  }
+
+  // ── Office Online via OneDrive CID ─────────────────────────────────────
+  // Requires user to be signed into Microsoft in Chrome + CID configured in ⚙️ Settings
+  if (_odCid && isOffice) {
+    const folder = (_odFolder || (rootHandle ? rootHandle.name : ''))
+      .replace(/\\/g, '/').replace(/^\/|\/$/g, '');
+    const fileUrl    = `https://d.docs.live.net/${_odCid}/${folder}/attachments/${filename}`;
+    const viewerUrl  = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`;
+    showOfficeOnlinePreview(viewerUrl, name, filename);
     return;
   }
 
@@ -1139,6 +1165,27 @@ async function openFilePreview(filename, name, mime) {
   if (isPdf) { window.open(url, '_blank'); return; }
   if (isSheet) { await showSpreadsheetPreview(url, name, filename); return; }
   window.open(url, '_blank');
+}
+
+function showOfficeOnlinePreview(viewerUrl, name, filename) {
+  document.getElementById('file-preview-title').textContent = name;
+  document.getElementById('file-preview-body').innerHTML =
+    `<div style="text-align:center;padding:16px 0 8px;font-size:12px;color:var(--text-muted);">
+       Loading Excel Online… make sure you are signed into Microsoft in Chrome.
+     </div>
+     <iframe src="${viewerUrl}"
+       style="width:100%;height:68vh;border:none;border-radius:6px;display:block;"
+       allowfullscreen
+       sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation">
+     </iframe>`;
+  const dlBtn = document.getElementById('file-preview-dl');
+  const openBtn = document.getElementById('file-preview-open');
+  dlBtn.onclick = async () => {
+    const u = await getBlobUrl(filename);
+    if (u) { const a=document.createElement('a'); a.href=u; a.download=name; a.click(); }
+  };
+  openBtn.style.display = 'none'; // hide "where is file" when using online viewer
+  document.getElementById('file-preview-overlay').classList.add('open');
 }
 
 async function showSpreadsheetPreview(blobUrl, name, filename) {
