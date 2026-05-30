@@ -237,7 +237,7 @@
       💡 <strong>How to pick a folder:</strong><br>
       • <strong>Local use:</strong> select any folder (e.g. Documents → New Folder → <em>BrainXell-ELN</em>)<br>
       • <strong>Shared network drive:</strong> type your mapped drive path (e.g. <code>Z:\ELN</code>) in the <em>Folder:</em> box at the bottom of the dialog, then press Enter and click Select Folder<br>
-      • The app automatically creates <code>entries\</code> and <code>attachments\</code> subfolders inside
+      • The app automatically creates <code>entries\</code> and <code>Main\</code> subfolders inside
     </div>
     <button class="btn btn-primary" style="width:100%;justify-content:center;font-size:15px;padding:12px;" onclick="selectFolder()">
       📁 &nbsp;Select Shared Folder
@@ -383,7 +383,7 @@
             <div class="attach-drop" id="attach-drop" onclick="document.getElementById('f-files').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFiles(event)">
               <input type="file" id="f-files" multiple onchange="handleFiles(this.files)">
               📎 &nbsp;Click to attach files, or drag &amp; drop<br>
-              <span style="font-size:11px;margin-top:4px;display:block;">Images, PDFs, Excel, CSV — saved to the <strong>attachments/</strong> folder on the shared drive</span>
+              <span style="font-size:11px;margin-top:4px;display:block;">Images, PDFs, Excel, CSV — saved to the <strong>Main/</strong> folder on the shared drive</span>
             </div>
             <div class="attach-list" id="attach-list"></div>
 
@@ -682,7 +682,7 @@ async function connectWithHandle(h) {
   showLoading('Setting up folders…');
   try {
     entriesDir     = await h.getDirectoryHandle('entries',     {create: true});
-    attachmentsDir = await h.getDirectoryHandle('attachments', {create: true});
+    attachmentsDir = await h.getDirectoryHandle('Main', {create: true});
     showLoading('Loading entries…');
     await loadAllEntries();
     document.getElementById('folder-name').textContent = '📁 ' + h.name;
@@ -1191,8 +1191,8 @@ async function openFilePreview(filename, name, mime) {
     // Navigate to the entry's experiment-type subfolder on OneDrive
     const subfolder  = filename.includes('/') ? filename.split('/')[0] : '';
     const folderPath = subfolder
-      ? `/personal/${_odCid}/${folder}/attachments/${subfolder}`
-      : `/personal/${_odCid}/${folder}/attachments`;
+      ? `/personal/${_odCid}/${folder}/Main/${subfolder}`
+      : `/personal/${_odCid}/${folder}/Main`;
     const oneDriveUrl = `https://onedrive.live.com/?id=${encodeURIComponent(folderPath)}&view=0`;
     showOneDriveOpenPrompt(oneDriveUrl, name, filename);
     return;
@@ -1213,11 +1213,11 @@ function showOneDriveOpenPrompt(folderUrl, name, filename) {
       <div style="font-size:48px;margin-bottom:16px;">📂</div>
       <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:10px;">Open in Excel Online</div>
       <p style="font-size:13px;color:var(--text-muted);line-height:1.7;max-width:420px;margin:0 auto 24px;">
-        Click below to open your <strong>attachments</strong> folder on OneDrive.<br>
+        Click below to open your <strong>Main</strong> folder on OneDrive.<br>
         Then click <strong>${htmlEsc(name)}</strong> to open it in Excel Online — full formatting, no download.
       </p>
       <a href="${folderUrl}" target="_blank" class="btn btn-primary" style="font-size:15px;padding:12px 28px;text-decoration:none;">
-        🔗 &nbsp;Open OneDrive attachments folder
+        🔗 &nbsp;Open OneDrive Main folder
       </a>
       <p style="margin-top:16px;font-size:11px;color:var(--text-muted);">
         A new tab will open → click <strong>${htmlEsc(name)}</strong> → Excel Online opens the file
@@ -1392,7 +1392,7 @@ function showFileLocationToast(folderName, filename) {
       <strong>${htmlEsc(folderName)}</strong> → attachments → <strong>${htmlEsc(filename)}</strong>
     </div>
     <div style="color:#cbd5e1;font-size:12px;">
-      Open <b>File Explorer</b> → navigate to your ELN folder → open the <b>attachments</b> subfolder → double-click the file to open in Excel.
+      Open <b>File Explorer</b> → navigate to your ELN folder → open the <b>Main</b> subfolder → double-click the file to open in Excel.
     </div>
     <div style="margin-top:6px;color:#94a3b8;font-size:11px;">
       If using OneDrive, the file is also at:<br>
