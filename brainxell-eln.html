@@ -491,7 +491,7 @@
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeFilePreviewDirect()">Close</button>
       <button class="btn btn-outline" id="file-preview-dl" style="margin-left:8px;">⬇ Download</button>
-      <button class="btn btn-primary" id="file-preview-open" style="margin-left:8px;">📂 Open in Excel</button>
+      <button class="btn btn-primary" id="file-preview-open" style="margin-left:8px;">📂 Where is this file?</button>
     </div>
   </div>
 </div>
@@ -1150,7 +1150,10 @@ async function showSpreadsheetPreview(blobUrl, name, filename) {
   const trigger = (btn, fn) => { const el = document.getElementById(btn); if (el) el.onclick = fn; };
   const dl = () => { const a=document.createElement('a'); a.href=blobUrl; a.download=name; a.click(); };
   trigger('file-preview-dl', dl);
-  trigger('file-preview-open', dl);
+  trigger('file-preview-open', () => {
+    const folderName = rootHandle ? rootHandle.name : 'your ELN folder';
+    showFileLocationToast(folderName, filename);
+  });
 
   try {
     await ensureXLSX();
@@ -1281,6 +1284,33 @@ async function showSpreadsheetPreview(blobUrl, name, filename) {
         <div style="margin-top:16px;font-size:13px;">Use <strong>Open in Excel</strong> below to view the full file.</div>
       </div>`;
   }
+}
+
+function showFileLocationToast(folderName, filename) {
+  // Show a modal-style info box with the file path and instructions
+  const msg = document.createElement('div');
+  msg.style.cssText = `
+    position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+    background:var(--navy);color:#fff;border-radius:10px;
+    padding:16px 22px;z-index:9999;max-width:520px;width:90%;
+    box-shadow:0 8px 30px rgba(0,0,0,.4);font-size:13px;line-height:1.7;`;
+  msg.innerHTML = `
+    <div style="font-weight:700;font-size:14px;margin-bottom:8px;">📂 File is already on your computer</div>
+    <div style="color:#93c5fd;margin-bottom:10px;">
+      <strong>${htmlEsc(folderName)}</strong> → attachments → <strong>${htmlEsc(filename)}</strong>
+    </div>
+    <div style="color:#cbd5e1;font-size:12px;">
+      Open <b>File Explorer</b> → navigate to your ELN folder → open the <b>attachments</b> subfolder → double-click the file to open in Excel.
+    </div>
+    <div style="margin-top:6px;color:#94a3b8;font-size:11px;">
+      If using OneDrive, the file is also at:<br>
+      <code style="background:rgba(255,255,255,.1);padding:2px 6px;border-radius:4px;">
+        OneDrive › ${htmlEsc(folderName)} › attachments › ${htmlEsc(filename)}
+      </code>
+    </div>
+    <button onclick="this.parentElement.remove()" style="margin-top:12px;background:var(--accent);border:none;color:#fff;padding:6px 18px;border-radius:6px;cursor:pointer;font-weight:600;">Got it</button>`;
+  document.body.appendChild(msg);
+  setTimeout(() => msg.remove(), 15000);
 }
 
 function closeFilePreview(e) { if (e.target===document.getElementById('file-preview-overlay')) closeFilePreviewDirect(); }
