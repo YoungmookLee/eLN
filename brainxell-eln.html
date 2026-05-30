@@ -6,71 +6,66 @@
 <title>BrainXell ELN</title>
 <style>
   :root {
-    --navy: #0d2b4e;
-    --navy-light: #1a3f6f;
-    --navy-pale: #e8eef5;
-    --accent: #2563eb;
-    --accent-hover: #1d4ed8;
-    --border: #c8d6e8;
-    --text: #1a202c;
-    --text-muted: #64748b;
-    --white: #ffffff;
-    --success: #059669;
-    --danger: #dc2626;
-    --warn: #d97706;
-    --sidebar-w: 220px;
+    --navy: #0d2b4e; --navy-light: #1a3f6f; --navy-pale: #e8eef5;
+    --accent: #2563eb; --accent-hover: #1d4ed8;
+    --border: #c8d6e8; --text: #1a202c; --text-muted: #64748b;
+    --white: #ffffff; --success: #059669; --danger: #dc2626;
+    --warn: #d97706; --sidebar-w: 220px;
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
 
+  /* ── Connect screen ── */
+  #connect-screen {
+    display: none; position: fixed; inset: 0; z-index: 900;
+    background: linear-gradient(135deg, #0d2b4e 0%, #1a3f6f 100%);
+    align-items: center; justify-content: center; padding: 24px;
+  }
+  .connect-card {
+    background: var(--white); border-radius: 16px; padding: 48px 52px;
+    max-width: 500px; width: 100%; box-shadow: 0 24px 60px rgba(0,0,0,.35);
+    text-align: center;
+  }
+  .connect-logo { display: flex; align-items: center; gap: 14px; justify-content: center; margin-bottom: 32px; }
+  .connect-logo-icon { width: 48px; height: 48px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; color: #fff; }
+  .connect-logo-text { font-size: 20px; font-weight: 700; color: var(--navy); text-align: left; }
+  .connect-logo-sub { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+  .connect-title { font-size: 22px; font-weight: 700; color: var(--navy); margin-bottom: 10px; }
+  .connect-desc { font-size: 14px; color: var(--text-muted); line-height: 1.7; margin-bottom: 28px; }
+  .connect-note { font-size: 12px; color: var(--text-muted); background: var(--navy-pale); border-radius: 8px; padding: 12px 16px; margin-bottom: 24px; text-align: left; line-height: 1.7; }
+  .connect-divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+  .reconnect-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 16px 20px; text-align: left; }
+  .reconnect-box p { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; }
+  .reconnect-name { font-size: 14px; font-weight: 600; color: var(--navy); }
+
+  /* ── Loading overlay ── */
+  #loading-overlay {
+    display: none; position: fixed; inset: 0; z-index: 800;
+    background: rgba(255,255,255,.85); align-items: center; justify-content: center;
+    flex-direction: column; gap: 16px;
+  }
+  .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+  .spinner-sm { width: 20px; height: 20px; border-width: 2px; display: inline-block; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading-msg { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+
   /* ── Header ── */
-  header {
-    background: var(--navy);
-    color: var(--white);
-    padding: 0 32px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky; top: 0; z-index: 100;
-    box-shadow: 0 2px 8px rgba(0,0,0,.35);
-  }
+  header { background: var(--navy); color: var(--white); padding: 0 32px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.35); }
   .logo { display: flex; align-items: center; gap: 12px; }
-  .logo-icon {
-    width: 36px; height: 36px; background: var(--accent);
-    border-radius: 8px; display: flex; align-items: center; justify-content: center;
-    font-weight: 800; font-size: 16px; letter-spacing: -1px;
-  }
-  .logo-text { font-size: 18px; font-weight: 700; letter-spacing: .3px; }
+  .logo-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; }
+  .logo-text { font-size: 18px; font-weight: 700; }
   .logo-sub { font-size: 11px; color: #93c5fd; font-weight: 400; letter-spacing: 1px; text-transform: uppercase; }
-  .header-right { font-size: 12px; color: #93c5fd; }
+  .header-right { display: flex; align-items: center; gap: 16px; font-size: 12px; color: #93c5fd; }
+  #folder-name { font-size: 12px; color: #93c5fd; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   /* ── Layout ── */
   .shell { display: flex; flex: 1; }
-  nav {
-    width: var(--sidebar-w);
-    background: var(--navy-light);
-    padding: 24px 0;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex-shrink: 0;
-  }
-  .nav-btn {
-    display: flex; align-items: center; gap: 10px;
-    padding: 11px 20px;
-    color: #bcd5f0;
-    background: none; border: none;
-    font-size: 14px; font-weight: 500;
-    cursor: pointer;
-    transition: background .15s, color .15s;
-    text-align: left; width: 100%;
-  }
+  nav { width: var(--sidebar-w); background: var(--navy-light); padding: 24px 0; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+  .nav-btn { display: flex; align-items: center; gap: 10px; padding: 11px 20px; color: #bcd5f0; background: none; border: none; font-size: 14px; font-weight: 500; cursor: pointer; transition: background .15s, color .15s; text-align: left; width: 100%; }
   .nav-btn:hover { background: rgba(255,255,255,.08); color: var(--white); }
   .nav-btn.active { background: var(--accent); color: var(--white); }
   .nav-icon { font-size: 16px; width: 20px; text-align: center; }
   .nav-divider { height: 1px; background: rgba(255,255,255,.1); margin: 8px 16px; }
-
   main { flex: 1; padding: 32px; overflow-y: auto; max-width: 1100px; }
 
   /* ── Views ── */
@@ -83,12 +78,7 @@
   .page-sub { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
 
   /* ── Buttons ── */
-  .btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 9px 18px; border-radius: 7px; border: none;
-    font-size: 14px; font-weight: 600; cursor: pointer;
-    transition: background .15s, transform .1s;
-  }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 7px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .15s, transform .1s; }
   .btn:active { transform: scale(.97); }
   .btn-primary { background: var(--accent); color: var(--white); }
   .btn-primary:hover { background: var(--accent-hover); }
@@ -99,13 +89,9 @@
   .btn-sm { padding: 5px 12px; font-size: 12px; }
   .btn-icon { padding: 7px 10px; }
 
-  /* ── Dashboard cards ── */
+  /* ── Stats ── */
   .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
-  .stat-card {
-    background: var(--white); border-radius: 10px;
-    padding: 20px 22px; border: 1px solid var(--border);
-    box-shadow: 0 1px 3px rgba(0,0,0,.06);
-  }
+  .stat-card { background: var(--white); border-radius: 10px; padding: 20px 22px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,.06); }
   .stat-label { font-size: 12px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: .5px; }
   .stat-value { font-size: 32px; font-weight: 800; color: var(--navy); line-height: 1.1; margin-top: 4px; }
   .stat-tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; margin-top: 8px; }
@@ -120,14 +106,7 @@
   .section-title { font-size: 16px; font-weight: 700; color: var(--navy); }
 
   /* ── Entry cards ── */
-  .entry-card {
-    background: var(--white); border-radius: 10px; border: 1px solid var(--border);
-    padding: 18px 22px; margin-bottom: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.04);
-    cursor: pointer;
-    transition: border-color .15s, box-shadow .15s;
-    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
-  }
+  .entry-card { background: var(--white); border-radius: 10px; border: 1px solid var(--border); padding: 18px 22px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.04); cursor: pointer; transition: border-color .15s, box-shadow .15s; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
   .entry-card:hover { border-color: var(--accent); box-shadow: 0 2px 10px rgba(37,99,235,.1); }
   .entry-card-main { flex: 1; min-width: 0; }
   .entry-title { font-size: 15px; font-weight: 600; color: var(--navy); margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -137,18 +116,8 @@
   .entry-card-actions { display: flex; gap: 6px; flex-shrink: 0; }
 
   /* ── Form ── */
-  .form-card {
-    background: var(--white); border-radius: 12px; border: 1px solid var(--border);
-    padding: 32px 36px;
-    box-shadow: 0 1px 4px rgba(0,0,0,.06);
-    max-width: 860px;
-  }
-  .form-section-title {
-    font-size: 13px; font-weight: 700; color: var(--text-muted);
-    text-transform: uppercase; letter-spacing: .8px;
-    margin: 28px 0 14px;
-    padding-bottom: 8px; border-bottom: 1px solid var(--border);
-  }
+  .form-card { background: var(--white); border-radius: 12px; border: 1px solid var(--border); padding: 32px 36px; box-shadow: 0 1px 4px rgba(0,0,0,.06); max-width: 860px; }
+  .form-section-title { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .8px; margin: 28px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
   .form-section-title:first-child { margin-top: 0; }
   .form-row { display: grid; gap: 18px; margin-bottom: 18px; }
   .form-row.cols-2 { grid-template-columns: 1fr 1fr; }
@@ -156,67 +125,51 @@
   .form-group { display: flex; flex-direction: column; gap: 6px; }
   label { font-size: 13px; font-weight: 600; color: var(--text); }
   label .req { color: var(--danger); margin-left: 2px; }
-  input, select, textarea {
-    font-family: inherit; font-size: 14px; color: var(--text);
-    border: 1.5px solid var(--border); border-radius: 7px;
-    padding: 9px 12px; background: var(--white);
-    transition: border-color .15s, box-shadow .15s;
-    width: 100%;
-  }
-  input:focus, select:focus, textarea:focus {
-    outline: none; border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(37,99,235,.12);
-  }
+  input, select, textarea { font-family: inherit; font-size: 14px; color: var(--text); border: 1.5px solid var(--border); border-radius: 7px; padding: 9px 12px; background: var(--white); transition: border-color .15s, box-shadow .15s; width: 100%; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
   textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
 
   /* ── Reagent table ── */
   .reagent-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-  .reagent-table th {
-    font-size: 11px; font-weight: 700; color: var(--text-muted);
-    text-transform: uppercase; letter-spacing: .5px;
-    padding: 8px 10px; text-align: left;
-    background: var(--navy-pale); border: 1px solid var(--border);
-  }
+  .reagent-table th { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; padding: 8px 10px; text-align: left; background: var(--navy-pale); border: 1px solid var(--border); }
   .reagent-table td { padding: 6px 8px; border: 1px solid var(--border); }
   .reagent-table td input { border: none; padding: 4px 6px; font-size: 13px; border-radius: 4px; }
   .reagent-table td input:focus { box-shadow: 0 0 0 2px rgba(37,99,235,.15); }
-  .reagent-table tr:hover td { background: #f8fafc; }
   .remove-row-btn { background: none; border: none; color: #cbd5e1; cursor: pointer; font-size: 16px; padding: 2px 6px; border-radius: 4px; transition: color .15s; }
   .remove-row-btn:hover { color: var(--danger); }
 
-  /* ── Form actions ── */
+  /* ── Attachments ── */
+  .attach-drop { border: 2px dashed var(--border); border-radius: 8px; padding: 24px 20px; text-align: center; color: var(--text-muted); font-size: 13px; cursor: pointer; transition: border-color .15s, background .15s; background: #f8fafc; }
+  .attach-drop:hover, .attach-drop.drag-over { border-color: var(--accent); background: #eff6ff; color: var(--accent); }
+  .attach-drop input[type=file] { display: none; }
+  .attach-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  .attach-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 7px; border: 1px solid var(--border); background: var(--white); font-size: 13px; }
+  .attach-thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 5px; flex-shrink: 0; border: 1px solid var(--border); pointer-events: none; }
+  .attach-icon { width: 44px; height: 44px; border-radius: 5px; background: var(--navy-pale); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; cursor: pointer; }
+  .attach-info { flex: 1; min-width: 0; }
+  .attach-name { font-weight: 600; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .attach-size { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .attach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 10px; }
+  .attach-grid-item { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--white); cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+  .attach-grid-item:hover { border-color: var(--accent); box-shadow: 0 2px 8px rgba(37,99,235,.15); }
+  .attach-grid-img { width: 100%; height: 90px; object-fit: cover; display: block; pointer-events: none; }
+  .attach-grid-label { font-size: 11px; padding: 5px 8px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .attach-grid-file { height: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 24px; pointer-events: none; }
+  .attach-placeholder { height: 90px; display: flex; align-items: center; justify-content: center; background: var(--navy-pale); pointer-events: none; }
   .form-actions { display: flex; align-items: center; gap: 12px; margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border); }
 
-  /* ── Search / filter bar ── */
+  /* ── Filter bar ── */
   .filter-bar { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
   .search-wrap { position: relative; flex: 1; min-width: 220px; }
   .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 14px; pointer-events: none; }
   .search-input { padding-left: 36px; }
   .filter-bar select { width: auto; min-width: 150px; flex-shrink: 0; }
 
-  /* ── Entry detail modal ── */
-  .modal-overlay {
-    display: none;
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,.45);
-    z-index: 200;
-    align-items: center; justify-content: center;
-    padding: 24px;
-  }
+  /* ── Modal ── */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; align-items: center; justify-content: center; padding: 24px; }
   .modal-overlay.open { display: flex; }
-  .modal {
-    background: var(--white); border-radius: 14px;
-    max-width: 800px; width: 100%;
-    max-height: 90vh; overflow-y: auto;
-    box-shadow: 0 20px 60px rgba(0,0,0,.3);
-  }
-  .modal-header {
-    position: sticky; top: 0; background: var(--white);
-    padding: 22px 28px 18px;
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
-    z-index: 1;
-  }
+  .modal { background: var(--white); border-radius: 14px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+  .modal-header { position: sticky; top: 0; background: var(--white); padding: 22px 28px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; z-index: 1; }
   .modal-title { font-size: 20px; font-weight: 700; color: var(--navy); }
   .modal-close { background: none; border: none; font-size: 22px; color: var(--text-muted); cursor: pointer; line-height: 1; padding: 0 4px; }
   .modal-close:hover { color: var(--danger); }
@@ -230,16 +183,16 @@
   .detail-reagent-table td { padding: 7px 10px; border: 1px solid var(--border); }
   .modal-footer { padding: 16px 28px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
 
+  /* ── Lightbox ── */
+  .lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.88); z-index: 500; align-items: center; justify-content: center; padding: 24px; }
+  .lightbox.open { display: flex; }
+  .lightbox img { max-width: 100%; max-height: 90vh; border-radius: 8px; box-shadow: 0 8px 40px rgba(0,0,0,.6); object-fit: contain; }
+  .lightbox-close { position: fixed; top: 18px; right: 24px; background: none; border: none; color: #fff; font-size: 32px; cursor: pointer; line-height: 1; opacity: .8; }
+  .lightbox-close:hover { opacity: 1; }
+  .lightbox-caption { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); color: #e2e8f0; font-size: 13px; background: rgba(0,0,0,.5); padding: 5px 14px; border-radius: 20px; pointer-events: none; white-space: nowrap; }
+
   /* ── Toast ── */
-  .toast {
-    position: fixed; bottom: 28px; right: 28px; z-index: 999;
-    background: var(--navy); color: var(--white);
-    padding: 12px 22px; border-radius: 8px; font-size: 14px; font-weight: 500;
-    box-shadow: 0 4px 16px rgba(0,0,0,.25);
-    transform: translateY(80px); opacity: 0;
-    transition: transform .3s, opacity .3s;
-    pointer-events: none;
-  }
+  .toast { position: fixed; bottom: 28px; right: 28px; z-index: 999; background: var(--navy); color: var(--white); padding: 12px 22px; border-radius: 8px; font-size: 14px; font-weight: 500; box-shadow: 0 4px 16px rgba(0,0,0,.25); transform: translateY(80px); opacity: 0; transition: transform .3s, opacity .3s; pointer-events: none; }
   .toast.show { transform: translateY(0); opacity: 1; }
 
   /* ── Empty state ── */
@@ -247,74 +200,9 @@
   .empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: .4; }
   .empty-state p { font-size: 15px; }
 
-  /* ── Attachments ── */
-  .attach-drop {
-    border: 2px dashed var(--border); border-radius: 8px;
-    padding: 24px 20px; text-align: center;
-    color: var(--text-muted); font-size: 13px;
-    cursor: pointer; transition: border-color .15s, background .15s;
-    background: #f8fafc;
-  }
-  .attach-drop:hover, .attach-drop.drag-over { border-color: var(--accent); background: #eff6ff; color: var(--accent); }
-  .attach-drop input[type=file] { display: none; }
-  .attach-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
-  .attach-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 8px 12px; border-radius: 7px; border: 1px solid var(--border);
-    background: var(--white); font-size: 13px;
-  }
-  .attach-thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 5px; flex-shrink: 0; border: 1px solid var(--border); pointer-events: none; }
-  .attach-icon { width: 44px; height: 44px; border-radius: 5px; background: var(--navy-pale); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-  .attach-info { flex: 1; min-width: 0; }
-  .attach-name { font-weight: 600; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .attach-size { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
-  .attach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 10px; }
-  .attach-grid-item { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--white); }
-  .attach-grid-img { width: 100%; height: 90px; object-fit: cover; display: block; pointer-events: none; }
-  .attach-grid-label { font-size: 11px; padding: 5px 8px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .attach-grid-file { height: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 24px; }
-
-  /* ── Lightbox ── */
-  .lightbox {
-    display: none;
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,.88);
-    z-index: 500;
-    align-items: center; justify-content: center;
-    padding: 24px;
-  }
-  .lightbox.open { display: flex; }
-  .lightbox img {
-    max-width: 100%; max-height: 90vh;
-    border-radius: 8px;
-    box-shadow: 0 8px 40px rgba(0,0,0,.6);
-    object-fit: contain;
-  }
-  .lightbox-close {
-    position: fixed; top: 18px; right: 24px;
-    background: none; border: none;
-    color: #fff; font-size: 32px; cursor: pointer;
-    line-height: 1; opacity: .8;
-  }
-  .lightbox-close:hover { opacity: 1; }
-  .lightbox-caption {
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    color: #e2e8f0; font-size: 13px; background: rgba(0,0,0,.5);
-    padding: 5px 14px; border-radius: 20px; pointer-events: none;
-  }
-
-  /* ── Print ── */
-  @media print {
-    header, nav, .modal-footer, .modal-close, .modal-overlay { display: none !important; }
-    .print-target { display: block !important; }
-    body { background: white; }
-    .modal { max-height: none; box-shadow: none; }
-  }
-
   @media (max-width: 768px) {
     nav { width: 56px; }
     .nav-btn span { display: none; }
-    .nav-icon { width: auto; }
     main { padding: 20px 16px; }
     .stats-row { grid-template-columns: 1fr 1fr; }
     .form-row.cols-2, .form-row.cols-3 { grid-template-columns: 1fr; }
@@ -324,201 +212,206 @@
 </head>
 <body>
 
-<header>
-  <div class="logo">
-    <div class="logo-icon">Bx</div>
-    <div>
-      <div class="logo-text">BrainXell Therapeutics</div>
-      <div class="logo-sub">Electronic Lab Notebook</div>
+<!-- ═══ CONNECT SCREEN ═══ -->
+<div id="connect-screen">
+  <div class="connect-card">
+    <div class="connect-logo">
+      <div class="connect-logo-icon">Bx</div>
+      <div>
+        <div class="connect-logo-text">BrainXell Therapeutics</div>
+        <div class="connect-logo-sub">Electronic Lab Notebook</div>
+      </div>
+    </div>
+    <div class="connect-title">Connect to Shared Folder</div>
+    <div class="connect-desc">All entries and attachments are saved directly to your team's shared network folder.</div>
+    <div class="connect-note">
+      💡 <strong>Before clicking below:</strong> make sure your Windows shared folder is <strong>mapped as a drive letter</strong> (e.g. <code>Z:\</code>) so Chrome can access it. Then select that drive or any subfolder inside it.
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;font-size:15px;padding:12px;" onclick="selectFolder()">
+      📁 &nbsp;Select Shared Folder
+    </button>
+    <div id="reconnect-section" style="display:none;margin-top:20px;">
+      <hr class="connect-divider">
+      <div class="reconnect-box">
+        <p>Previously connected folder:</p>
+        <div class="reconnect-name" id="saved-folder-name"></div>
+        <div style="display:flex;gap:10px;margin-top:12px;">
+          <button class="btn btn-outline" style="flex:1;justify-content:center;" onclick="reconnect()">🔗 Reconnect</button>
+          <button class="btn btn-outline btn-sm" onclick="selectFolder()">Select different</button>
+        </div>
+      </div>
+    </div>
+    <div id="browser-warn" style="display:none;margin-top:20px;color:var(--danger);font-size:14px;font-weight:600;">
+      ⚠️ Please use Google Chrome or Microsoft Edge — this feature requires a modern browser.
     </div>
   </div>
-  <div class="header-right" id="headerDate"></div>
-</header>
+</div>
 
-<div class="shell">
-  <nav>
-    <button class="nav-btn active" onclick="showView('dashboard')" id="nav-dashboard">
-      <span class="nav-icon">⬛</span><span>Dashboard</span>
-    </button>
-    <button class="nav-btn" onclick="showView('new-entry')" id="nav-new-entry">
-      <span class="nav-icon">＋</span><span>New Entry</span>
-    </button>
-    <div class="nav-divider"></div>
-    <button class="nav-btn" onclick="showView('all-entries')" id="nav-all-entries">
-      <span class="nav-icon">☰</span><span>All Entries</span>
-    </button>
-  </nav>
+<!-- ═══ LOADING OVERLAY ═══ -->
+<div id="loading-overlay" style="display:none;position:fixed;inset:0;z-index:800;background:rgba(255,255,255,.85);align-items:center;justify-content:center;flex-direction:column;gap:16px;">
+  <div class="spinner"></div>
+  <div id="loading-msg" style="font-size:14px;color:var(--text-muted);font-weight:500;">Loading…</div>
+</div>
 
-  <main>
-    <!-- ═══ DASHBOARD ═══ -->
-    <div class="view active" id="view-dashboard">
-      <div class="page-header">
-        <div>
-          <div class="page-title">Dashboard</div>
-          <div class="page-sub">Overview of lab notebook activity</div>
-        </div>
-        <button class="btn btn-primary" onclick="showView('new-entry')">＋ &nbsp;New Entry</button>
-      </div>
-
-      <div class="stats-row" id="stats-row"></div>
-
-      <div class="recent-entries-header">
-        <div class="section-title">Recent Entries</div>
-        <button class="btn btn-outline btn-sm" onclick="showView('all-entries')">View all →</button>
-      </div>
-      <div id="recent-list"></div>
-    </div>
-
-    <!-- ═══ NEW ENTRY ═══ -->
-    <div class="view" id="view-new-entry">
-      <div class="page-header">
-        <div>
-          <div class="page-title" id="form-page-title">New Entry</div>
-          <div class="page-sub">Fill in all relevant fields and save</div>
-        </div>
-      </div>
-      <div class="form-card">
-        <form id="entry-form" onsubmit="saveEntry(event)">
-          <input type="hidden" id="edit-id">
-
-          <div class="form-section-title">Experiment Overview</div>
-          <div class="form-row cols-2">
-            <div class="form-group">
-              <label for="f-title">Experiment Number <span class="req">*</span></label>
-              <input type="text" id="f-title" placeholder="e.g. EXP-2026-001" required>
-            </div>
-            <div class="form-group">
-              <label for="f-type">Experiment Type <span class="req">*</span></label>
-              <select id="f-type" required>
-                <option value="">— Select type —</option>
-                <option>iPSC bank</option>
-                <option>DAP</option>
-                <option>DAN</option>
-                <option>DP</option>
-                <option>Flow</option>
-                <option>ICC</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-row cols-3">
-            <div class="form-group">
-              <label for="f-scientist">Scientist <span class="req">*</span></label>
-              <select id="f-scientist" required>
-                <option value="">— Select —</option>
-                <option>Young</option>
-                <option>Noelle</option>
-                <option>Araceli</option>
-                <option>Alexis</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="f-date">Date <span class="req">*</span></label>
-              <input type="date" id="f-date" required>
-            </div>
-            <div class="form-group">
-              <label for="f-time">Time</label>
-              <input type="time" id="f-time">
-            </div>
-          </div>
-
-          <div class="form-section-title">Protocol &amp; Samples</div>
-          <div class="form-row cols-2">
-            <div class="form-group">
-              <label for="f-protocol">Protocol Used</label>
-              <input type="text" id="f-protocol" placeholder="e.g. BX-CC-001 v3, in-house, literature ref…">
-            </div>
-            <div class="form-group">
-              <label for="f-samples">Samples / Cell Lines</label>
-              <input type="text" id="f-samples" placeholder="e.g. iPSC line BX-07, passage 24; Neuro2a">
-            </div>
-          </div>
-
-          <div class="form-section-title">Reagents &amp; Concentrations</div>
-          <table class="reagent-table" id="reagent-table">
-            <thead>
-              <tr>
-                <th style="width:38%">Reagent / Compound</th>
-                <th style="width:22%">Concentration</th>
-                <th style="width:22%">Volume / Amount</th>
-                <th style="width:12%">Lot #</th>
-                <th style="width:6%"></th>
-              </tr>
-            </thead>
-            <tbody id="reagent-body"></tbody>
-          </table>
-          <button type="button" class="btn btn-outline btn-sm" onclick="addReagentRow()">+ Add Reagent</button>
-
-          <div class="form-section-title">Results &amp; Follow-up</div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="f-observations">Observations &amp; Results <span class="req">*</span></label>
-              <textarea id="f-observations" rows="5" placeholder="Describe what you observed, measured, or found. Include any images taken, quantitative data, or unexpected outcomes." required></textarea>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="f-nextsteps">Next Steps / Follow-up</label>
-              <textarea id="f-nextsteps" rows="3" placeholder="e.g. Repeat with n=3, adjust treatment dose, image on Day 21…"></textarea>
-            </div>
-          </div>
-
-          <div class="form-section-title">Attachments</div>
-          <div class="attach-drop" id="attach-drop" onclick="document.getElementById('f-files').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFiles(event)">
-            <input type="file" id="f-files" multiple onchange="handleFiles(this.files)">
-            📎 &nbsp;Click to attach files, or drag &amp; drop here<br>
-            <span style="font-size:11px;margin-top:4px;display:block;">Images, PDFs, Excel, CSV — stored locally in your browser</span>
-          </div>
-          <div class="attach-list" id="attach-list"></div>
-
-          <div class="form-actions">
-            <button type="submit" class="btn btn-primary">💾 &nbsp;Save Entry</button>
-            <button type="button" class="btn btn-outline" onclick="resetForm()">Clear</button>
-            <button type="button" class="btn btn-outline" onclick="showView('all-entries')">Cancel</button>
-          </div>
-        </form>
+<!-- ═══ MAIN APP ═══ -->
+<div id="app" style="display:none;flex-direction:column;min-height:100vh;">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">Bx</div>
+      <div>
+        <div class="logo-text">BrainXell Therapeutics</div>
+        <div class="logo-sub">Electronic Lab Notebook</div>
       </div>
     </div>
-
-    <!-- ═══ ALL ENTRIES ═══ -->
-    <div class="view" id="view-all-entries">
-      <div class="page-header">
-        <div>
-          <div class="page-title">All Entries</div>
-          <div class="page-sub" id="entries-count-label"></div>
-        </div>
-        <button class="btn btn-primary" onclick="showView('new-entry')">＋ &nbsp;New Entry</button>
-      </div>
-
-      <div class="filter-bar">
-        <div class="search-wrap">
-          <span class="search-icon">🔍</span>
-          <input type="text" class="search-input" id="search-input" placeholder="Search titles, observations, samples…" oninput="renderAllEntries()">
-        </div>
-        <select id="filter-scientist" onchange="renderAllEntries()">
-          <option value="">All scientists</option>
-          <option>Young</option>
-          <option>Noelle</option>
-          <option>Araceli</option>
-          <option>Alexis</option>
-        </select>
-        <select id="filter-type" onchange="renderAllEntries()">
-          <option value="">All types</option>
-          <option>iPSC bank</option>
-          <option>DAP</option>
-          <option>DAN</option>
-          <option>DP</option>
-          <option>Flow</option>
-          <option>ICC</option>
-        </select>
-        <select id="filter-sort" onchange="renderAllEntries()">
-          <option value="newest">Newest first</option>
-          <option value="oldest">Oldest first</option>
-        </select>
-      </div>
-
-      <div id="all-entries-list"></div>
+    <div class="header-right">
+      <span id="folder-name"></span>
+      <span id="headerDate"></span>
     </div>
-  </main>
+  </header>
+
+  <div class="shell">
+    <nav>
+      <button class="nav-btn active" onclick="showView('dashboard')" id="nav-dashboard"><span class="nav-icon">⬛</span><span>Dashboard</span></button>
+      <button class="nav-btn" onclick="showView('new-entry')" id="nav-new-entry"><span class="nav-icon">＋</span><span>New Entry</span></button>
+      <div class="nav-divider"></div>
+      <button class="nav-btn" onclick="showView('all-entries')" id="nav-all-entries"><span class="nav-icon">☰</span><span>All Entries</span></button>
+    </nav>
+
+    <main>
+      <!-- ═══ DASHBOARD ═══ -->
+      <div class="view active" id="view-dashboard">
+        <div class="page-header">
+          <div><div class="page-title">Dashboard</div><div class="page-sub">Overview of lab notebook activity</div></div>
+          <button class="btn btn-primary" onclick="showView('new-entry')">＋ &nbsp;New Entry</button>
+        </div>
+        <div class="stats-row" id="stats-row"></div>
+        <div class="recent-entries-header">
+          <div class="section-title">Recent Entries</div>
+          <button class="btn btn-outline btn-sm" onclick="showView('all-entries')">View all →</button>
+        </div>
+        <div id="recent-list"></div>
+      </div>
+
+      <!-- ═══ NEW ENTRY ═══ -->
+      <div class="view" id="view-new-entry">
+        <div class="page-header">
+          <div><div class="page-title" id="form-page-title">New Entry</div><div class="page-sub">Fill in all relevant fields and save</div></div>
+        </div>
+        <div class="form-card">
+          <form id="entry-form" onsubmit="saveEntry(event)">
+            <input type="hidden" id="edit-id">
+            <div class="form-section-title">Experiment Overview</div>
+            <div class="form-row cols-2">
+              <div class="form-group">
+                <label for="f-title">Experiment Number <span class="req">*</span></label>
+                <input type="text" id="f-title" placeholder="e.g. EXP-2026-001" required>
+              </div>
+              <div class="form-group">
+                <label for="f-type">Experiment Type <span class="req">*</span></label>
+                <select id="f-type" required>
+                  <option value="">— Select type —</option>
+                  <option>iPSC bank</option><option>DAP</option><option>DAN</option>
+                  <option>DP</option><option>Flow</option><option>ICC</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row cols-3">
+              <div class="form-group">
+                <label for="f-scientist">Scientist <span class="req">*</span></label>
+                <select id="f-scientist" required>
+                  <option value="">— Select —</option>
+                  <option>Young</option><option>Noelle</option><option>Araceli</option><option>Alexis</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="f-date">Date <span class="req">*</span></label>
+                <input type="date" id="f-date" required>
+              </div>
+              <div class="form-group">
+                <label for="f-time">Time</label>
+                <input type="time" id="f-time">
+              </div>
+            </div>
+
+            <div class="form-section-title">Protocol &amp; Samples</div>
+            <div class="form-row cols-2">
+              <div class="form-group">
+                <label for="f-protocol">Protocol Used</label>
+                <input type="text" id="f-protocol" placeholder="e.g. BX-CC-001 v3">
+              </div>
+              <div class="form-group">
+                <label for="f-samples">Samples / Cell Lines</label>
+                <input type="text" id="f-samples" placeholder="e.g. iPSC line BX-07, passage 24">
+              </div>
+            </div>
+
+            <div class="form-section-title">Reagents &amp; Concentrations</div>
+            <table class="reagent-table" id="reagent-table">
+              <thead><tr><th style="width:38%">Reagent / Compound</th><th style="width:22%">Concentration</th><th style="width:22%">Volume / Amount</th><th style="width:12%">Lot #</th><th style="width:6%"></th></tr></thead>
+              <tbody id="reagent-body"></tbody>
+            </table>
+            <button type="button" class="btn btn-outline btn-sm" onclick="addReagentRow()">+ Add Reagent</button>
+
+            <div class="form-section-title">Results &amp; Follow-up</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="f-observations">Observations &amp; Results <span class="req">*</span></label>
+                <textarea id="f-observations" rows="5" placeholder="Describe what you observed, measured, or found." required></textarea>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="f-nextsteps">Next Steps / Follow-up</label>
+                <textarea id="f-nextsteps" rows="3" placeholder="e.g. Repeat with n=3, adjust treatment dose…"></textarea>
+              </div>
+            </div>
+
+            <div class="form-section-title">Attachments</div>
+            <div class="attach-drop" id="attach-drop" onclick="document.getElementById('f-files').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFiles(event)">
+              <input type="file" id="f-files" multiple onchange="handleFiles(this.files)">
+              📎 &nbsp;Click to attach files, or drag &amp; drop<br>
+              <span style="font-size:11px;margin-top:4px;display:block;">Images, PDFs, Excel, CSV — saved to the <strong>attachments/</strong> folder on the shared drive</span>
+            </div>
+            <div class="attach-list" id="attach-list"></div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" id="save-btn">💾 &nbsp;Save Entry</button>
+              <button type="button" class="btn btn-outline" onclick="resetForm()">Clear</button>
+              <button type="button" class="btn btn-outline" onclick="showView('all-entries')">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ═══ ALL ENTRIES ═══ -->
+      <div class="view" id="view-all-entries">
+        <div class="page-header">
+          <div><div class="page-title">All Entries</div><div class="page-sub" id="entries-count-label"></div></div>
+          <button class="btn btn-primary" onclick="showView('new-entry')">＋ &nbsp;New Entry</button>
+        </div>
+        <div class="filter-bar">
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-input" id="search-input" placeholder="Search titles, observations, samples…" oninput="renderAllEntries()">
+          </div>
+          <select id="filter-scientist" onchange="renderAllEntries()">
+            <option value="">All scientists</option>
+            <option>Young</option><option>Noelle</option><option>Araceli</option><option>Alexis</option>
+          </select>
+          <select id="filter-type" onchange="renderAllEntries()">
+            <option value="">All types</option>
+            <option>iPSC bank</option><option>DAP</option><option>DAN</option>
+            <option>DP</option><option>Flow</option><option>ICC</option>
+          </select>
+          <select id="filter-sort" onchange="renderAllEntries()">
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+          </select>
+        </div>
+        <div id="all-entries-list"></div>
+      </div>
+    </main>
+  </div>
 </div>
 
 <!-- ═══ DETAIL MODAL ═══ -->
@@ -527,7 +420,7 @@
     <div class="modal-header">
       <div>
         <div class="modal-title" id="modal-title"></div>
-        <div style="margin-top:6px; display:flex; gap:8px; flex-wrap:wrap;" id="modal-tags"></div>
+        <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;" id="modal-tags"></div>
       </div>
       <button class="modal-close" onclick="closeModalDirect()">✕</button>
     </div>
@@ -539,7 +432,7 @@
 <!-- ═══ LIGHTBOX ═══ -->
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
   <button class="lightbox-close" onclick="closeLightbox()">✕</button>
-  <img id="lightbox-img" src="" alt="">
+  <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()">
   <div class="lightbox-caption" id="lightbox-caption"></div>
 </div>
 
@@ -547,143 +440,288 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ── Storage ──────────────────────────────────────────────────────────────
-const STORE_KEY = 'bxell_eln_v1';
-function load() { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || []; } catch { return []; } }
-function save(entries) { localStorage.setItem(STORE_KEY, JSON.stringify(entries)); }
-
-// ── Helpers ──────────────────────────────────────────────────────────────
-function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
-function today() { return new Date().toISOString().slice(0,10); }
-function nowTime() { return new Date().toTimeString().slice(0,5); }
-function fmtDate(d) {
-  if (!d) return '';
-  const [y,m,dy] = d.split('-');
-  return new Date(y,m-1,dy).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+'use strict';
+// ── IndexedDB — persist directory handle across sessions ─────────────────
+function openHandleDB() {
+  return new Promise((res, rej) => {
+    const req = indexedDB.open('bxell_eln_fs', 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('handles');
+    req.onsuccess = e => res(e.target.result);
+    req.onerror = e => rej(e);
+  });
 }
-function showToast(msg, ms=2800) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), ms);
+async function saveHandle(h) {
+  const db = await openHandleDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction('handles', 'readwrite');
+    tx.objectStore('handles').put(h, 'root');
+    tx.oncomplete = res; tx.onerror = rej;
+  });
 }
-function typeTag(type) {
-  const map = { 'iPSC bank':'tag-blue','DAP':'tag-green','DAN':'tag-purple','DP':'tag-teal','Flow':'tag-amber','ICC':'tag-red' };
-  return `<span class="stat-tag ${map[type]||'tag-blue'}">${type}</span>`;
+async function loadSavedHandle() {
+  try {
+    const db = await openHandleDB();
+    return new Promise(res => {
+      const req = db.transaction('handles','readonly').objectStore('handles').get('root');
+      req.onsuccess = e => res(e.target.result || null);
+      req.onerror = () => res(null);
+    });
+  } catch { return null; }
 }
 
-// ── Header date ───────────────────────────────────────────────────────────
-document.getElementById('headerDate').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+// ── State ────────────────────────────────────────────────────────────────
+let rootHandle = null, entriesDir = null, attachmentsDir = null;
+let cachedEntries = [];          // entry objects (no attachment file data)
+let pendingAttachments = [];     // files staged in the form
+const blobCache = {};            // filename → object URL (for loaded files)
 
-// ── Navigation ────────────────────────────────────────────────────────────
-function showView(v) {
-  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
-  document.getElementById('view-'+v).classList.add('active');
-  document.getElementById('nav-'+v).classList.add('active');
-  if (v==='dashboard') renderDashboard();
-  if (v==='all-entries') renderAllEntries();
-  if (v==='new-entry') {
-    const id = document.getElementById('edit-id').value;
-    if (!id) { resetForm(); }
-    window.scrollTo(0,0);
+// ── File system helpers ──────────────────────────────────────────────────
+async function loadAllEntries() {
+  cachedEntries = [];
+  for await (const [name, fh] of entriesDir.entries()) {
+    if (!name.endsWith('.json')) continue;
+    try {
+      const txt = await (await fh.getFile()).text();
+      cachedEntries.push(JSON.parse(txt));
+    } catch (e) { console.warn('skip', name, e); }
+  }
+  cachedEntries.sort((a, b) => b.createdAt - a.createdAt);
+}
+
+async function writeEntry(entry) {
+  const fh = await entriesDir.getFileHandle(entry.id + '.json', {create: true});
+  const w = await fh.createWritable();
+  await w.write(JSON.stringify(entry, null, 2));
+  await w.close();
+}
+
+async function removeEntryFile(id) {
+  try { await entriesDir.removeEntry(id + '.json'); } catch {}
+}
+
+async function writeAttachmentFile(att) {
+  // att.data = base64 dataURL, att.name, att.mime, att.id
+  const ext = att.name.includes('.') ? att.name.split('.').pop().toLowerCase() : 'bin';
+  const filename = att.id + '.' + ext;
+  const b64 = att.data.split(',')[1];
+  const bin = atob(b64);
+  const buf = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  const blob = new Blob([buf], {type: att.mime || 'application/octet-stream'});
+  const fh = await attachmentsDir.getFileHandle(filename, {create: true});
+  const w = await fh.createWritable();
+  await w.write(blob);
+  await w.close();
+  return filename;
+}
+
+async function removeAttachmentFile(filename) {
+  try {
+    await attachmentsDir.removeEntry(filename);
+    if (blobCache[filename]) { URL.revokeObjectURL(blobCache[filename]); delete blobCache[filename]; }
+  } catch {}
+}
+
+async function getBlobUrl(filename) {
+  if (blobCache[filename]) return blobCache[filename];
+  try {
+    const fh = await attachmentsDir.getFileHandle(filename);
+    const file = await fh.getFile();
+    const url = URL.createObjectURL(file);
+    blobCache[filename] = url;
+    return url;
+  } catch { return null; }
+}
+
+// ── Connect / init ───────────────────────────────────────────────────────
+let _savedHandle = null;
+
+async function initApp() {
+  document.getElementById('headerDate').textContent =
+    new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  if (!('showDirectoryPicker' in window)) {
+    document.getElementById('browser-warn').style.display = '';
+    document.getElementById('connect-screen').style.display = 'flex';
+    return;
+  }
+
+  _savedHandle = await loadSavedHandle();
+  if (_savedHandle) {
+    try {
+      const perm = await _savedHandle.queryPermission({mode: 'readwrite'});
+      if (perm === 'granted') { await connectWithHandle(_savedHandle); return; }
+      document.getElementById('saved-folder-name').textContent = '📁 ' + _savedHandle.name;
+      document.getElementById('reconnect-section').style.display = '';
+    } catch { _savedHandle = null; }
+  }
+  document.getElementById('connect-screen').style.display = 'flex';
+}
+
+async function selectFolder() {
+  try {
+    const h = await window.showDirectoryPicker({mode: 'readwrite', id: 'bxell-eln', startIn: 'documents'});
+    await saveHandle(h);
+    await connectWithHandle(h);
+  } catch (e) {
+    if (e.name !== 'AbortError') showToast('❌ ' + e.message);
   }
 }
 
-// ── Attachments ──────────────────────────────────────────────────────────
-let pendingAttachments = []; // [{name, size, mime, data(base64)}]
+async function reconnect() {
+  if (!_savedHandle) return;
+  try {
+    const perm = await _savedHandle.requestPermission({mode: 'readwrite'});
+    if (perm === 'granted') await connectWithHandle(_savedHandle);
+    else showToast('⚠️ Permission denied.');
+  } catch (e) { showToast('❌ ' + e.message); }
+}
 
-function dragOver(e){ e.preventDefault(); document.getElementById('attach-drop').classList.add('drag-over'); }
-function dragLeave(e){ document.getElementById('attach-drop').classList.remove('drag-over'); }
-function dropFiles(e){ e.preventDefault(); dragLeave(e); handleFiles(e.dataTransfer.files); }
+async function connectWithHandle(h) {
+  rootHandle = h;
+  document.getElementById('connect-screen').style.display = 'none';
+  showLoading('Setting up folders…');
+  try {
+    entriesDir     = await h.getDirectoryHandle('entries',     {create: true});
+    attachmentsDir = await h.getDirectoryHandle('attachments', {create: true});
+    showLoading('Loading entries…');
+    await loadAllEntries();
+    document.getElementById('folder-name').textContent = '📁 ' + h.name;
+    document.getElementById('app').style.display = 'flex';
+    hideLoading();
+    resetForm();
+    renderDashboard();
+    showView('dashboard');
+  } catch (e) {
+    hideLoading();
+    document.getElementById('connect-screen').style.display = 'flex';
+    showToast('❌ ' + e.message);
+  }
+}
+
+function showLoading(msg) {
+  document.getElementById('loading-msg').textContent = msg || 'Loading…';
+  document.getElementById('loading-overlay').style.display = 'flex';
+}
+function hideLoading() {
+  document.getElementById('loading-overlay').style.display = 'none';
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────
+function showView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + v).classList.add('active');
+  document.getElementById('nav-' + v).classList.add('active');
+  if (v === 'dashboard') renderDashboard();
+  if (v === 'all-entries') renderAllEntries();
+  if (v === 'new-entry' && !document.getElementById('edit-id').value) resetForm();
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+function today() { return new Date().toISOString().slice(0, 10); }
+function nowTime() { return new Date().toTimeString().slice(0, 5); }
+function fmtDate(d) {
+  if (!d) return '';
+  const [y, m, dy] = d.split('-');
+  return new Date(y, m-1, dy).toLocaleDateString('en-US', {year:'numeric',month:'short',day:'numeric'});
+}
+function htmlEsc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function showToast(msg, ms=3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), ms);
+}
+function typeTag(type) {
+  const map = {'iPSC bank':'tag-blue','DAP':'tag-green','DAN':'tag-purple','DP':'tag-teal','Flow':'tag-amber','ICC':'tag-red'};
+  return `<span class="stat-tag ${map[type]||'tag-blue'}">${htmlEsc(type)}</span>`;
+}
+function fileIcon(mime) {
+  if (!mime) return '📄';
+  if (mime.startsWith('image/')) return '🖼️';
+  if (mime === 'application/pdf') return '📕';
+  if (mime.includes('spreadsheet')||mime.includes('excel')||mime.includes('csv')) return '📊';
+  if (mime.includes('word')||mime.includes('document')) return '📝';
+  return '📄';
+}
+function sizeStr(bytes) {
+  return bytes > 1024*1024 ? (bytes/1024/1024).toFixed(1)+' MB' : Math.round(bytes/1024)+' KB';
+}
+
+// ── Reagent rows ─────────────────────────────────────────────────────────
+function addReagentRow(reagent='', conc='', vol='', lot='') {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text" placeholder="Reagent name" value="${htmlEsc(reagent)}"></td>
+    <td><input type="text" placeholder="e.g. 10 µM" value="${htmlEsc(conc)}"></td>
+    <td><input type="text" placeholder="e.g. 500 µL" value="${htmlEsc(vol)}"></td>
+    <td><input type="text" placeholder="Lot #" value="${htmlEsc(lot)}"></td>
+    <td><button type="button" class="remove-row-btn" onclick="this.closest('tr').remove()" title="Remove">✕</button></td>`;
+  document.getElementById('reagent-body').appendChild(tr);
+}
+function getReagents() {
+  return [...document.querySelectorAll('#reagent-body tr')].map(tr => {
+    const [a,b,c,d] = tr.querySelectorAll('input');
+    return {reagent:a.value.trim(), conc:b.value.trim(), vol:c.value.trim(), lot:d.value.trim()};
+  }).filter(r => r.reagent);
+}
+
+// ── Attachment file handling ──────────────────────────────────────────────
+function dragOver(e) { e.preventDefault(); document.getElementById('attach-drop').classList.add('drag-over'); }
+function dragLeave() { document.getElementById('attach-drop').classList.remove('drag-over'); }
+function dropFiles(e) { e.preventDefault(); dragLeave(); handleFiles(e.dataTransfer.files); }
 
 function handleFiles(fileList) {
   [...fileList].forEach(file => {
-    if (file.size > 5*1024*1024) { showToast(`⚠️ ${file.name} skipped — max 5 MB per file.`, 3500); return; }
     const reader = new FileReader();
     reader.onload = ev => {
-      const att = { id: uid(), name: file.name, size: file.size, mime: file.type, data: ev.target.result };
+      const att = {id: uid(), name: file.name, size: file.size, mime: file.type, data: ev.target.result, isNew: true};
       pendingAttachments.push(att);
-      renderAttachList(pendingAttachments, 'attach-list', true);
+      renderAttachList();
     };
     reader.readAsDataURL(file);
   });
 }
 
-// Global map: attachment id → attachment object (populated when opening an entry or form)
-const _attMap = {};
-
-function registerAttachments(attachments) {
-  (attachments || []).forEach(a => { _attMap[a.id] = a; });
+function removeAttachment(id) {
+  pendingAttachments = pendingAttachments.filter(a => a.id !== id);
+  renderAttachList();
 }
 
-function renderAttachList(attachments, containerId, editable) {
-  registerAttachments(attachments);
-  const el = document.getElementById(containerId);
-  if (!attachments || !attachments.length) { el.innerHTML = ''; return; }
-  el.innerHTML = attachments.map(a => {
+function renderAttachList() {
+  const el = document.getElementById('attach-list');
+  if (!pendingAttachments.length) { el.innerHTML = ''; return; }
+  el.innerHTML = pendingAttachments.map(a => {
     const isImg = a.mime && a.mime.startsWith('image/');
-    const sizeStr = a.size > 1024*1024 ? (a.size/1024/1024).toFixed(1)+' MB' : Math.round(a.size/1024)+' KB';
+    const src = a.isNew ? a.data : (a.blobUrl || '');
     const thumb = isImg
-      ? `<div style="cursor:pointer;flex-shrink:0;" onclick="openLightbox('${a.id}')"><img class="attach-thumb" src="${a.data}" alt="${htmlEsc(a.name)}"></div>`
-      : `<div class="attach-icon" style="cursor:pointer;" onclick="openFileBlob('${a.id}')">${fileIcon(a.mime)}</div>`;
-    const del = editable ? `<button type="button" class="remove-row-btn" onclick="removeAttachment('${a.id}')" title="Remove">✕</button>` : `<a href="${a.data}" download="${htmlEsc(a.name)}" class="btn btn-outline btn-sm" onclick="event.stopPropagation()">⬇ Download</a>`;
-    return `<div class="attach-item">${thumb}<div class="attach-info"><div class="attach-name">${htmlEsc(a.name)}</div><div class="attach-size">${sizeStr}</div></div>${del}</div>`;
-  }).join('');
-}
-
-function renderAttachGrid(attachments) {
-  if (!attachments || !attachments.length) return '';
-  registerAttachments(attachments);
-  const items = attachments.map(a => {
-    const isImg = a.mime && a.mime.startsWith('image/');
-    if (isImg) {
-      return `<div class="attach-grid-item" style="cursor:pointer;" data-att-id="${a.id}" data-att-type="image">
-        <img class="attach-grid-img" src="${a.data}" alt="${htmlEsc(a.name)}">
-        <div class="attach-grid-label" title="${htmlEsc(a.name)}">${htmlEsc(a.name)}</div>
-      </div>`;
-    }
-    return `<div class="attach-grid-item" style="cursor:pointer;" data-att-id="${a.id}" data-att-type="file" title="Click to view">
-      <div class="attach-grid-file">${fileIcon(a.mime)}<div style="font-size:11px;color:var(--text-muted);padding:0 6px;text-align:center;word-break:break-all">${htmlEsc(a.name)}</div></div>
-      <div class="attach-grid-label" style="color:var(--accent);font-weight:600;">Click to view</div>
+      ? `<div style="cursor:pointer;flex-shrink:0;" data-list-id="${a.id}"><img class="attach-thumb" src="${src}" alt="${htmlEsc(a.name)}"></div>`
+      : `<div class="attach-icon" data-list-id="${a.id}">${fileIcon(a.mime)}</div>`;
+    return `<div class="attach-item">
+      ${thumb}
+      <div class="attach-info"><div class="attach-name">${htmlEsc(a.name)}</div><div class="attach-size">${sizeStr(a.size)}</div></div>
+      <button type="button" class="remove-row-btn" onclick="removeAttachment('${a.id}')" title="Remove">✕</button>
     </div>`;
   }).join('');
-  return `<div class="detail-section"><div class="detail-label">Attachments</div><div class="attach-grid" id="attach-grid-modal">${items}</div></div>`;
+
+  // Attach click handlers to thumbnails via addEventListener
+  el.querySelectorAll('[data-list-id]').forEach(el => {
+    el.addEventListener('click', () => {
+      const att = pendingAttachments.find(a => a.id === el.dataset.listId);
+      if (!att) return;
+      const isImg = att.mime && att.mime.startsWith('image/');
+      if (isImg) {
+        const src = att.isNew ? att.data : (att.blobUrl || '');
+        openLightboxDirect(src, att.name);
+      } else {
+        openBlobFromDataUrl(att.isNew ? att.data : null, att.blobUrl, att.mime);
+      }
+    });
+  });
 }
 
-function fileIcon(mime) {
-  if (!mime) return '📄';
-  if (mime.startsWith('image/')) return '🖼️';
-  if (mime === 'application/pdf') return '📕';
-  if (mime.includes('spreadsheet') || mime.includes('excel') || mime.includes('csv')) return '📊';
-  if (mime.includes('word') || mime.includes('document')) return '📝';
-  return '📄';
-}
-
-function removeAttachment(id) {
-  pendingAttachments = pendingAttachments.filter(a=>a.id!==id);
-  renderAttachList(pendingAttachments, 'attach-list', true);
-}
-
-// ── Reagent rows ──────────────────────────────────────────────────────────
-function addReagentRow(reagent='', conc='', vol='', lot='') {
-  const tr = document.createElement('tr');
-  tr.innerHTML = `
-    <td><input type="text" placeholder="Reagent name" value="${esc(reagent)}"></td>
-    <td><input type="text" placeholder="e.g. 10 µM" value="${esc(conc)}"></td>
-    <td><input type="text" placeholder="e.g. 500 µL" value="${esc(vol)}"></td>
-    <td><input type="text" placeholder="Lot #" value="${esc(lot)}"></td>
-    <td><button type="button" class="remove-row-btn" onclick="this.closest('tr').remove()" title="Remove">✕</button></td>`;
-  document.getElementById('reagent-body').appendChild(tr);
-}
-function getReagents() {
-  return [...document.querySelectorAll('#reagent-body tr')].map(tr=>{
-    const inputs = tr.querySelectorAll('input');
-    return { reagent: inputs[0].value.trim(), conc: inputs[1].value.trim(), vol: inputs[2].value.trim(), lot: inputs[3].value.trim() };
-  }).filter(r=>r.reagent);
-}
-function esc(s){ return (s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
-
-// ── Form ─────────────────────────────────────────────────────────────────
+// ── Form reset / save / edit ──────────────────────────────────────────────
 function resetForm() {
   document.getElementById('edit-id').value = '';
   document.getElementById('form-page-title').textContent = 'New Entry';
@@ -693,99 +731,135 @@ function resetForm() {
   document.getElementById('reagent-body').innerHTML = '';
   addReagentRow();
   pendingAttachments = [];
-  renderAttachList([], 'attach-list', true);
+  renderAttachList();
 }
 
-function saveEntry(e) {
+async function saveEntry(e) {
   e.preventDefault();
-  const entries = load();
-  const editId = document.getElementById('edit-id').value;
-  const entry = {
-    id: editId || uid(),
-    title: document.getElementById('f-title').value.trim(),
-    type: document.getElementById('f-type').value,
-    scientist: document.getElementById('f-scientist').value,
-    date: document.getElementById('f-date').value,
-    time: document.getElementById('f-time').value,
-    protocol: document.getElementById('f-protocol').value.trim(),
-    samples: document.getElementById('f-samples').value.trim(),
-    reagents: getReagents(),
-    attachments: pendingAttachments.slice(),
-    observations: document.getElementById('f-observations').value.trim(),
-    nextsteps: document.getElementById('f-nextsteps').value.trim(),
-    createdAt: editId ? (entries.find(x=>x.id===editId)||{}).createdAt || Date.now() : Date.now(),
-    updatedAt: Date.now(),
-  };
-  if (editId) {
-    const idx = entries.findIndex(x=>x.id===editId);
-    if (idx>-1) entries[idx]=entry; else entries.unshift(entry);
-  } else {
-    entries.unshift(entry);
+  const saveBtn = document.getElementById('save-btn');
+  saveBtn.disabled = true;
+  saveBtn.innerHTML = '<span class="spinner spinner-sm"></span> Saving…';
+
+  try {
+    const editId = document.getElementById('edit-id').value;
+    const oldEntry = editId ? cachedEntries.find(x => x.id === editId) : null;
+
+    // Write new attachment files, keep existing references
+    const attachments = [];
+    for (const att of pendingAttachments) {
+      if (att.isNew) {
+        const filename = await writeAttachmentFile(att);
+        attachments.push({id: att.id, name: att.name, size: att.size, mime: att.mime, filename});
+      } else {
+        attachments.push({id: att.id, name: att.name, size: att.size, mime: att.mime, filename: att.filename});
+      }
+    }
+
+    // Delete attachment files that were removed during edit
+    if (oldEntry) {
+      const keptIds = new Set(pendingAttachments.map(a => a.id));
+      for (const a of (oldEntry.attachments || [])) {
+        if (!keptIds.has(a.id)) await removeAttachmentFile(a.filename);
+      }
+    }
+
+    const entry = {
+      id: editId || uid(),
+      title:       document.getElementById('f-title').value.trim(),
+      type:        document.getElementById('f-type').value,
+      scientist:   document.getElementById('f-scientist').value,
+      date:        document.getElementById('f-date').value,
+      time:        document.getElementById('f-time').value,
+      protocol:    document.getElementById('f-protocol').value.trim(),
+      samples:     document.getElementById('f-samples').value.trim(),
+      reagents:    getReagents(),
+      attachments,
+      observations: document.getElementById('f-observations').value.trim(),
+      nextsteps:   document.getElementById('f-nextsteps').value.trim(),
+      createdAt:   oldEntry ? oldEntry.createdAt : Date.now(),
+      updatedAt:   Date.now(),
+    };
+
+    await writeEntry(entry);
+
+    const idx = cachedEntries.findIndex(x => x.id === entry.id);
+    if (idx > -1) cachedEntries[idx] = entry; else cachedEntries.unshift(entry);
+    cachedEntries.sort((a, b) => b.createdAt - a.createdAt);
+
+    showToast(editId ? '✅ Entry updated.' : '✅ Entry saved.');
+    resetForm();
+    showView('all-entries');
+  } catch (err) {
+    showToast('❌ Save failed: ' + err.message);
+    console.error(err);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = '💾 &nbsp;Save Entry';
   }
-  save(entries);
-  showToast(editId ? '✅ Entry updated.' : '✅ Entry saved.');
-  resetForm();
-  showView('all-entries');
+}
+
+async function editEntry(id) {
+  const entry = cachedEntries.find(e => e.id === id);
+  if (!entry) return;
+
+  document.getElementById('edit-id').value = id;
+  document.getElementById('form-page-title').textContent = 'Edit Entry';
+  document.getElementById('f-title').value = entry.title;
+  document.getElementById('f-type').value = entry.type;
+  document.getElementById('f-scientist').value = entry.scientist;
+  document.getElementById('f-date').value = entry.date;
+  document.getElementById('f-time').value = entry.time || '';
+  document.getElementById('f-protocol').value = entry.protocol || '';
+  document.getElementById('f-samples').value = entry.samples || '';
+  document.getElementById('f-observations').value = entry.observations || '';
+  document.getElementById('f-nextsteps').value = entry.nextsteps || '';
+  document.getElementById('reagent-body').innerHTML = '';
+  (entry.reagents || []).forEach(r => addReagentRow(r.reagent, r.conc, r.vol, r.lot));
+  if (!entry.reagents || !entry.reagents.length) addReagentRow();
+
+  // Load existing attachments as blob URLs
+  pendingAttachments = [];
+  for (const a of (entry.attachments || [])) {
+    const isImg = a.mime && a.mime.startsWith('image/');
+    const blobUrl = isImg ? await getBlobUrl(a.filename) : null;
+    pendingAttachments.push({...a, blobUrl, isNew: false});
+  }
+  renderAttachList();
+  showView('new-entry');
 }
 
 // ── Dashboard ─────────────────────────────────────────────────────────────
 function renderDashboard() {
-  const entries = load();
   const now = new Date();
   const weekAgo = new Date(now - 7*864e5);
-  const thisWeek = entries.filter(e=>new Date(e.date)>=weekAgo).length;
+  const thisWeek = cachedEntries.filter(e => new Date(e.date) >= weekAgo).length;
   const byType = {};
-  entries.forEach(e=>{ byType[e.type]=(byType[e.type]||0)+1; });
-  const scientists = [...new Set(entries.map(e=>e.scientist))].length;
+  cachedEntries.forEach(e => { byType[e.type] = (byType[e.type]||0)+1; });
+  const scientists = [...new Set(cachedEntries.map(e => e.scientist).filter(Boolean))].length;
+  const top = Object.keys(byType).sort((a,b) => byType[b]-byType[a])[0] || '—';
 
-  const statsEl = document.getElementById('stats-row');
-  statsEl.innerHTML = `
-    <div class="stat-card">
-      <div class="stat-label">Total Entries</div>
-      <div class="stat-value">${entries.length}</div>
-      <span class="stat-tag tag-blue">All time</span>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">This Week</div>
-      <div class="stat-value">${thisWeek}</div>
-      <span class="stat-tag tag-green">Last 7 days</span>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Scientists</div>
-      <div class="stat-value">${scientists}</div>
-      <span class="stat-tag tag-purple">Active</span>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Top Type</div>
-      <div class="stat-value" style="font-size:18px;margin-top:8px;">${topType(byType)}</div>
-    </div>`;
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Total Entries</div><div class="stat-value">${cachedEntries.length}</div><span class="stat-tag tag-blue">All time</span></div>
+    <div class="stat-card"><div class="stat-label">This Week</div><div class="stat-value">${thisWeek}</div><span class="stat-tag tag-green">Last 7 days</span></div>
+    <div class="stat-card"><div class="stat-label">Scientists</div><div class="stat-value">${scientists}</div><span class="stat-tag tag-purple">Active</span></div>
+    <div class="stat-card"><div class="stat-label">Top Type</div><div class="stat-value" style="font-size:18px;margin-top:8px;">${htmlEsc(top)}</div></div>`;
 
-  const recentEl = document.getElementById('recent-list');
-  const recent = entries.slice(0,6);
-  if (!recent.length) {
-    recentEl.innerHTML = `<div class="empty-state"><div class="empty-icon">🧪</div><p>No entries yet. Create your first lab note!</p></div>`;
-    return;
-  }
-  recentEl.innerHTML = recent.map(e=>entryCardHtml(e)).join('');
-}
-
-function topType(byType) {
-  const keys = Object.keys(byType);
-  if (!keys.length) return '—';
-  return keys.sort((a,b)=>byType[b]-byType[a])[0];
+  const recent = cachedEntries.slice(0, 6);
+  document.getElementById('recent-list').innerHTML = recent.length
+    ? recent.map(entryCardHtml).join('')
+    : `<div class="empty-state"><div class="empty-icon">🧪</div><p>No entries yet. Create your first lab note!</p></div>`;
 }
 
 // ── All Entries ───────────────────────────────────────────────────────────
 function renderAllEntries() {
-  const entries = load();
-  const q = (document.getElementById('search-input').value||'').toLowerCase();
+  const q   = (document.getElementById('search-input').value || '').toLowerCase();
   const sci = document.getElementById('filter-scientist').value;
   const typ = document.getElementById('filter-type').value;
   const sort = document.getElementById('filter-sort').value;
 
-  let filtered = entries.filter(e=>{
-    if (sci && e.scientist!==sci) return false;
-    if (typ && e.type!==typ) return false;
+  let filtered = cachedEntries.filter(e => {
+    if (sci && e.scientist !== sci) return false;
+    if (typ && e.type !== typ) return false;
     if (q) {
       const hay = [e.title,e.scientist,e.type,e.protocol,e.samples,e.observations,e.nextsteps,
         ...(e.reagents||[]).map(r=>r.reagent)].join(' ').toLowerCase();
@@ -793,27 +867,25 @@ function renderAllEntries() {
     }
     return true;
   });
-  if (sort==='oldest') filtered.sort((a,b)=>a.date.localeCompare(b.date));
+  if (sort === 'oldest') filtered.sort((a,b) => a.date.localeCompare(b.date));
 
   document.getElementById('entries-count-label').textContent = `${filtered.length} entr${filtered.length===1?'y':'ies'} found`;
   const el = document.getElementById('all-entries-list');
-  if (!filtered.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🔬</div><p>${entries.length?'No entries match your filters.':'No entries yet. Create your first lab note!'}</p></div>`;
-    return;
-  }
-  el.innerHTML = filtered.map(e=>entryCardHtml(e)).join('');
+  el.innerHTML = filtered.length
+    ? filtered.map(entryCardHtml).join('')
+    : `<div class="empty-state"><div class="empty-icon">🔬</div><p>${cachedEntries.length ? 'No entries match your filters.' : 'No entries yet.'}</p></div>`;
 }
 
 function entryCardHtml(e) {
+  const hasAttach = e.attachments && e.attachments.length > 0;
   return `<div class="entry-card" onclick="openEntry('${e.id}')">
     <div class="entry-card-main">
       <div class="entry-title">${htmlEsc(e.title)}</div>
       <div class="entry-meta">
         <span>${fmtDate(e.date)}${e.time?' &nbsp;·&nbsp; '+e.time:''}</span>
-        <span class="dot">·</span>
-        <span>${htmlEsc(e.scientist)}</span>
-        <span class="dot">·</span>
-        ${typeTag(e.type)}
+        <span class="dot">·</span><span>${htmlEsc(e.scientist)}</span>
+        <span class="dot">·</span>${typeTag(e.type)}
+        ${hasAttach ? `<span class="dot">·</span><span>📎 ${e.attachments.length}</span>` : ''}
       </div>
     </div>
     <div class="entry-card-actions" onclick="event.stopPropagation()">
@@ -823,126 +895,146 @@ function entryCardHtml(e) {
   </div>`;
 }
 
-function htmlEsc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-// ── Entry detail ──────────────────────────────────────────────────────────
-function openEntry(id) {
-  const entry = load().find(e=>e.id===id);
+// ── Entry detail (modal) ──────────────────────────────────────────────────
+async function openEntry(id) {
+  const entry = cachedEntries.find(e => e.id === id);
   if (!entry) return;
+
   document.getElementById('modal-title').textContent = entry.title;
   document.getElementById('modal-tags').innerHTML = typeTag(entry.type);
 
-  let reagentRows = (entry.reagents||[]).map(r=>`
-    <tr>
-      <td>${htmlEsc(r.reagent)}</td>
-      <td>${htmlEsc(r.conc)}</td>
-      <td>${htmlEsc(r.vol)}</td>
-      <td>${htmlEsc(r.lot)}</td>
-    </tr>`).join('');
+  const reagentRows = (entry.reagents||[]).map(r => `
+    <tr><td>${htmlEsc(r.reagent)}</td><td>${htmlEsc(r.conc)}</td><td>${htmlEsc(r.vol)}</td><td>${htmlEsc(r.lot)}</td></tr>`).join('');
+
+  // Build attachment grid (placeholder tiles — images loaded async below)
+  let attachHtml = '';
+  if (entry.attachments && entry.attachments.length) {
+    const tiles = entry.attachments.map(a => {
+      const isImg = a.mime && a.mime.startsWith('image/');
+      return `<div class="attach-grid-item" data-att-id="${a.id}" data-att-type="${isImg?'image':'file'}" data-att-filename="${htmlEsc(a.filename)}">
+        ${isImg
+          ? `<div class="attach-placeholder"><div class="spinner spinner-sm" style="margin:0;"></div></div>`
+          : `<div class="attach-grid-file">${fileIcon(a.mime)}<div style="font-size:11px;color:var(--text-muted);padding:0 6px;text-align:center;word-break:break-all;pointer-events:none">${htmlEsc(a.name)}</div></div>`}
+        <div class="attach-grid-label">${htmlEsc(a.name)}</div>
+      </div>`;
+    }).join('');
+    attachHtml = `<div class="detail-section"><div class="detail-label">Attachments (${entry.attachments.length})</div><div class="attach-grid" id="attach-grid-modal">${tiles}</div></div>`;
+  }
 
   document.getElementById('modal-body').innerHTML = `
     <div class="detail-grid">
-      <div class="detail-section">
-        <div class="detail-label">Date &amp; Time</div>
-        <div class="detail-value">${fmtDate(entry.date)}${entry.time?' &nbsp;at&nbsp; '+entry.time:''}</div>
-      </div>
-      <div class="detail-section">
-        <div class="detail-label">Scientist</div>
-        <div class="detail-value">${htmlEsc(entry.scientist)}</div>
-      </div>
-      <div class="detail-section">
-        <div class="detail-label">Protocol</div>
-        <div class="detail-value">${htmlEsc(entry.protocol)||'—'}</div>
-      </div>
-      <div class="detail-section">
-        <div class="detail-label">Samples / Cell Lines</div>
-        <div class="detail-value">${htmlEsc(entry.samples)||'—'}</div>
-      </div>
+      <div class="detail-section"><div class="detail-label">Date &amp; Time</div><div class="detail-value">${fmtDate(entry.date)}${entry.time?' &nbsp;at&nbsp; '+entry.time:''}</div></div>
+      <div class="detail-section"><div class="detail-label">Scientist</div><div class="detail-value">${htmlEsc(entry.scientist)}</div></div>
+      <div class="detail-section"><div class="detail-label">Protocol</div><div class="detail-value">${htmlEsc(entry.protocol)||'—'}</div></div>
+      <div class="detail-section"><div class="detail-label">Samples / Cell Lines</div><div class="detail-value">${htmlEsc(entry.samples)||'—'}</div></div>
     </div>
-    ${reagentRows ? `
-    <div class="detail-section">
-      <div class="detail-label">Reagents &amp; Concentrations</div>
-      <table class="detail-reagent-table">
-        <thead><tr><th>Reagent</th><th>Concentration</th><th>Volume / Amount</th><th>Lot #</th></tr></thead>
-        <tbody>${reagentRows}</tbody>
-      </table>
-    </div>` : ''}
-    <div class="detail-section">
-      <div class="detail-label">Observations &amp; Results</div>
-      <div class="detail-value">${htmlEsc(entry.observations)}</div>
-    </div>
-    ${entry.nextsteps ? `<div class="detail-section">
-      <div class="detail-label">Next Steps / Follow-up</div>
-      <div class="detail-value">${htmlEsc(entry.nextsteps)}</div>
-    </div>` : ''}
-    ${renderAttachGrid(entry.attachments)}
+    ${reagentRows ? `<div class="detail-section"><div class="detail-label">Reagents &amp; Concentrations</div>
+      <table class="detail-reagent-table"><thead><tr><th>Reagent</th><th>Concentration</th><th>Volume / Amount</th><th>Lot #</th></tr></thead>
+      <tbody>${reagentRows}</tbody></table></div>` : ''}
+    <div class="detail-section"><div class="detail-label">Observations &amp; Results</div><div class="detail-value">${htmlEsc(entry.observations)}</div></div>
+    ${entry.nextsteps ? `<div class="detail-section"><div class="detail-label">Next Steps / Follow-up</div><div class="detail-value">${htmlEsc(entry.nextsteps)}</div></div>` : ''}
+    ${attachHtml}
     <div style="margin-top:16px;font-size:11px;color:var(--text-muted);">
       Entry ID: ${entry.id} &nbsp;·&nbsp; Created: ${new Date(entry.createdAt).toLocaleString()}
-      ${entry.updatedAt!==entry.createdAt ? ' &nbsp;·&nbsp; Updated: '+new Date(entry.updatedAt).toLocaleString() : ''}
+      ${entry.updatedAt!==entry.createdAt?' &nbsp;·&nbsp; Updated: '+new Date(entry.updatedAt).toLocaleString():''}
     </div>`;
 
   document.getElementById('modal-footer').innerHTML = `
-    <button class="btn btn-outline" onclick="editEntry('${id}');closeModalDirect()">✏️ &nbsp;Edit</button>
+    <button class="btn btn-outline" onclick="closeModalDirect();editEntry('${id}')">✏️ &nbsp;Edit</button>
     <button class="btn btn-primary" onclick="printEntry('${id}')">🖨️ &nbsp;Print / PDF</button>
     <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="deleteEntry('${id}');closeModalDirect()">🗑️ Delete</button>`;
 
   document.getElementById('modal-overlay').classList.add('open');
 
-  // Attach click handlers after innerHTML is set — avoids inline onclick issues in Chrome
+  // ── Load image thumbnails + wire click handlers ──────────────────────
   const grid = document.getElementById('attach-grid-modal');
-  if (grid) {
-    grid.querySelectorAll('[data-att-id]').forEach(el => {
-      el.addEventListener('click', () => {
-        const id = el.dataset.attId;
-        if (el.dataset.attType === 'image') openLightbox(id);
-        else openFileBlob(id);
+  if (!grid) return;
+
+  for (const a of (entry.attachments || [])) {
+    const tile = grid.querySelector(`[data-att-id="${a.id}"]`);
+    if (!tile) continue;
+
+    if (a.mime && a.mime.startsWith('image/')) {
+      // Load blob URL, replace placeholder with real img
+      getBlobUrl(a.filename).then(url => {
+        if (!url) return;
+        tile.querySelector('.attach-placeholder').outerHTML =
+          `<img class="attach-grid-img" src="${url}" alt="${htmlEsc(a.name)}" style="pointer-events:none;">`;
       });
-    });
+
+      tile.addEventListener('click', async () => {
+        const url = await getBlobUrl(a.filename);
+        if (url) openLightboxDirect(url, a.name);
+      });
+    } else {
+      tile.addEventListener('click', async () => {
+        const url = await getBlobUrl(a.filename);
+        if (url) window.open(url, '_blank');
+      });
+    }
   }
 }
 
-function closeModal(e){ if(e.target===document.getElementById('modal-overlay')) closeModalDirect(); }
-function closeModalDirect(){ document.getElementById('modal-overlay').classList.remove('open'); }
+function closeModal(e) { if (e.target === document.getElementById('modal-overlay')) closeModalDirect(); }
+function closeModalDirect() { document.getElementById('modal-overlay').classList.remove('open'); }
 
-// ── Edit ──────────────────────────────────────────────────────────────────
-function editEntry(id) {
-  const entry = load().find(e=>e.id===id);
-  if (!entry) return;
-  document.getElementById('edit-id').value = id;
-  document.getElementById('form-page-title').textContent = 'Edit Entry';
-  document.getElementById('f-title').value = entry.title;
-  document.getElementById('f-type').value = entry.type;
-  document.getElementById('f-scientist').value = entry.scientist;
-  document.getElementById('f-date').value = entry.date;
-  document.getElementById('f-time').value = entry.time||'';
-  document.getElementById('f-protocol').value = entry.protocol||'';
-  document.getElementById('f-samples').value = entry.samples||'';
-  document.getElementById('f-observations').value = entry.observations||'';
-  document.getElementById('f-nextsteps').value = entry.nextsteps||'';
-  document.getElementById('reagent-body').innerHTML = '';
-  (entry.reagents||[]).forEach(r=>addReagentRow(r.reagent,r.conc,r.vol,r.lot));
-  if (!entry.reagents||!entry.reagents.length) addReagentRow();
-  pendingAttachments = (entry.attachments||[]).slice();
-  renderAttachList(pendingAttachments, 'attach-list', true);
-  showView('new-entry');
+// ── Lightbox ──────────────────────────────────────────────────────────────
+function openLightboxDirect(src, name) {
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox-caption').textContent = name || '';
+  document.getElementById('lightbox').classList.add('open');
 }
+function openBlobFromDataUrl(dataUrl, blobUrl, mime) {
+  if (blobUrl) { window.open(blobUrl, '_blank'); return; }
+  if (!dataUrl) return;
+  const b64 = dataUrl.split(',')[1];
+  const bin = atob(b64);
+  const buf = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  window.open(URL.createObjectURL(new Blob([buf], {type: mime||'application/octet-stream'})), '_blank');
+}
+function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
 
 // ── Delete ────────────────────────────────────────────────────────────────
-function deleteEntry(id) {
+async function deleteEntry(id) {
   if (!confirm('Delete this entry? This cannot be undone.')) return;
-  const entries = load().filter(e=>e.id!==id);
-  save(entries);
+  const entry = cachedEntries.find(e => e.id === id);
+  if (entry) {
+    for (const a of (entry.attachments || [])) await removeAttachmentFile(a.filename);
+    await removeEntryFile(id);
+    cachedEntries = cachedEntries.filter(e => e.id !== id);
+  }
   showToast('🗑️ Entry deleted.');
   renderAllEntries();
   renderDashboard();
 }
 
 // ── Print ─────────────────────────────────────────────────────────────────
-function printEntry(id) {
-  const entry = load().find(e=>e.id===id);
+async function printEntry(id) {
+  const entry = cachedEntries.find(e => e.id === id);
   if (!entry) return;
-  const reagentRows = (entry.reagents||[]).map(r=>`<tr><td>${htmlEsc(r.reagent)}</td><td>${htmlEsc(r.conc)}</td><td>${htmlEsc(r.vol)}</td><td>${htmlEsc(r.lot)}</td></tr>`).join('');
-  const win = window.open('','_blank');
+
+  showLoading('Preparing print…');
+  const reagentRows = (entry.reagents||[]).map(r =>
+    `<tr><td>${htmlEsc(r.reagent)}</td><td>${htmlEsc(r.conc)}</td><td>${htmlEsc(r.vol)}</td><td>${htmlEsc(r.lot)}</td></tr>`).join('');
+
+  let attachPrintHtml = '';
+  if (entry.attachments && entry.attachments.length) {
+    const items = [];
+    for (const a of entry.attachments) {
+      if (a.mime && a.mime.startsWith('image/')) {
+        const url = await getBlobUrl(a.filename);
+        if (url) items.push(`<div><img src="${url}" style="max-width:220px;max-height:180px;border-radius:6px;border:1px solid #cbd5e1;display:block;"><div style="font-size:11px;color:#94a3b8;margin-top:3px;">${htmlEsc(a.name)}</div></div>`);
+      } else {
+        items.push(`<div style="padding:8px 14px;border:1px solid #cbd5e1;border-radius:6px;font-size:12px;">${fileIcon(a.mime)} ${htmlEsc(a.name)}</div>`);
+      }
+    }
+    if (items.length) attachPrintHtml = `<h2>Attachments</h2><div style="display:flex;flex-wrap:wrap;gap:10px;">${items.join('')}</div>`;
+  }
+  hideLoading();
+
+  const win = window.open('', '_blank');
   win.document.write(`<!DOCTYPE html><html><head><title>${htmlEsc(entry.title)}</title>
   <style>
     body{font-family:'Segoe UI',sans-serif;max-width:800px;margin:32px auto;padding:0 24px;color:#1a202c;}
@@ -964,36 +1056,14 @@ function printEntry(id) {
   ${reagentRows?`<h2>Reagents &amp; Concentrations</h2><table><thead><tr><th>Reagent</th><th>Concentration</th><th>Volume / Amount</th><th>Lot #</th></tr></thead><tbody>${reagentRows}</tbody></table>`:''}
   <h2>Observations &amp; Results</h2><p>${htmlEsc(entry.observations)}</p>
   ${entry.nextsteps?`<h2>Next Steps / Follow-up</h2><p>${htmlEsc(entry.nextsteps)}</p>`:''}
-  ${(entry.attachments&&entry.attachments.length)?`<h2>Attachments</h2><div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;">${entry.attachments.map(a=>a.mime&&a.mime.startsWith('image/')?`<div><img src="${a.data}" style="max-width:220px;max-height:180px;border-radius:6px;border:1px solid #cbd5e1;display:block;"><div style="font-size:11px;color:#94a3b8;margin-top:3px;">${htmlEsc(a.name)}</div></div>`:`<div style="padding:8px 14px;border:1px solid #cbd5e1;border-radius:6px;font-size:12px;">${fileIcon(a.mime)} ${htmlEsc(a.name)}</div>`).join('')}</div>`:''}
+  ${attachPrintHtml}
   <div class="footer">BrainXell Therapeutics ELN &nbsp;·&nbsp; Entry ID: ${entry.id} &nbsp;·&nbsp; Printed: ${new Date().toLocaleString()}</div>
   <script>window.onload=()=>{window.print();}<\/script></body></html>`);
   win.document.close();
 }
 
-// ── Lightbox ─────────────────────────────────────────────────────────────
-function openLightbox(id) {
-  const att = _attMap[id];
-  if (!att) return;
-  document.getElementById('lightbox-img').src = att.data;
-  document.getElementById('lightbox-caption').textContent = att.name || '';
-  document.getElementById('lightbox').classList.add('open');
-}
-function openFileBlob(id) {
-  const att = _attMap[id];
-  if (!att) return;
-  const mime = att.mime || 'application/octet-stream';
-  const byteStr = atob(att.data.split(',')[1]);
-  const buf = new Uint8Array(byteStr.length);
-  for (let i = 0; i < byteStr.length; i++) buf[i] = byteStr.charCodeAt(i);
-  const blob = new Blob([buf], { type: mime });
-  window.open(URL.createObjectURL(blob), '_blank');
-}
-function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
-
-// ── Init ──────────────────────────────────────────────────────────────────
-resetForm();
-renderDashboard();
+// ── Start ─────────────────────────────────────────────────────────────────
+initApp();
 </script>
 </body>
 </html>
